@@ -29,7 +29,7 @@ export function Why({ e }: { e: LogEvent }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="mt-3">
-      <button type="button" onClick={() => setOpen(!open)} className="text-[14px] text-act hover:underline">
+      <button type="button" onClick={() => setOpen(!open)} className="text-[14px] text-ink underline decoration-rule underline-offset-4 hover:decoration-ink">
         {open ? "Hide" : "Why"}
       </button>
       {open && (
@@ -157,7 +157,7 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
         </div>
         <div className="mt-2 flex items-center justify-between text-[14px] text-muted">
           <span>{st.status === "sending" ? <span className="working">Adding to your reply…</span> : "In your reply to Muse"}</span>
-          <button type="button" onClick={reopen} className="text-act hover:underline">
+          <button type="button" onClick={reopen} className="text-ink underline decoration-rule underline-offset-4 hover:decoration-ink">
             Change
           </button>
         </div>
@@ -343,7 +343,7 @@ function ReplanPanel({
     <div className="border-t border-rule bg-paper px-6 py-6 sm:px-10">
       <div className="flex items-baseline justify-between gap-4">
         <span className="text-[13px] text-muted">&ldquo;{r.text}&rdquo;</span>
-        <button type="button" onClick={onDismiss} className="text-[14px] text-act hover:underline">
+        <button type="button" onClick={onDismiss} className="text-[14px] text-ink underline decoration-rule underline-offset-4 hover:decoration-ink">
           Discard
         </button>
       </div>

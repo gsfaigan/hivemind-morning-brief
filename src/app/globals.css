@@ -9,14 +9,16 @@
   --muted: #6e6e73;
   --rule: #d2d2d7;
   --rule-strong: #1d1d1f;
-  --act: #0066cc; /* the one accent: actions, selection, "needs you" */
-  --act-bg: #e8f1fc;
-  --ok: #1e7c34;
-  --ok-bg: #e6f4e9;
-  --warn: #935400;
-  --warn-bg: #fff3dc;
-  --bad: #d70015;
-  --bad-bg: #fdecec;
+  /* Two colours only: ink, and vermilion as the single accent. Status is
+     carried by weight and fill, not hue. */
+  --act: #b82f18; /* actions, selection, "needs you" */
+  --act-bg: #fbece8;
+  --bad: #b82f18; /* problems share the accent, shown as a tinted tag */
+  --bad-bg: #fbece8;
+  --ok: #1d1d1f;
+  --ok-bg: #e8e8ed;
+  --warn: #424245;
+  --warn-bg: #e8e8ed;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -29,14 +31,14 @@
     --muted: #98989d;
     --rule: #38383a;
     --rule-strong: #f5f5f7;
-    --act: #2997ff;
-    --act-bg: #0b2745;
-    --ok: #30d158;
-    --ok-bg: #0f2a17;
-    --warn: #ffb340;
-    --warn-bg: #2e2106;
-    --bad: #ff6961;
-    --bad-bg: #3a1512;
+    --act: #ff6a4d;
+    --act-bg: #3a1a13;
+    --bad: #ff6a4d;
+    --bad-bg: #3a1a13;
+    --ok: #f5f5f7;
+    --ok-bg: #2c2c2e;
+    --warn: #d1d1d6;
+    --warn-bg: #2c2c2e;
   }
 }
 
@@ -103,14 +105,7 @@ body {
   --ink-2: #d1d1d6;
   --muted: #a1a1a6;
   --rule: #2c2c2e;
-  --act: #2997ff;
-  --ok: #30d158;
-  --bad: #ff6961;
-  --warn: #ffb340;
-  --warn-bg: #2e2106;
-  --bad-bg: #3a1512;
-  --ok-bg: #0f2a17;
-  --act-bg: #0b2745;
+  --act: #d8431f;
   --fill: #2c2c2e;
   --card: #1c1c1e;
   background: #000;

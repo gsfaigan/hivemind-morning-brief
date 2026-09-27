@@ -11,7 +11,7 @@ type Tone = "problem" | "tradeoff" | "status" | "pick" | "ok" | "act";
 const toneCls: Record<Tone, string> = {
   problem: "bg-bad-bg text-bad",
   tradeoff: "bg-warn-bg text-warn",
-  status: "bg-fill text-ink-2",
+  status: "border border-rule text-muted",
   pick: "bg-ink text-card",
   ok: "bg-ok-bg text-ok",
   act: "bg-act-bg text-act",
@@ -157,7 +157,7 @@ export function Btn({
     primary: "bg-act text-white hover:brightness-110",
     act: "bg-act text-white hover:brightness-110",
     secondary: "bg-fill text-ink hover:brightness-95",
-    ghost: "text-act hover:underline underline-offset-4 !px-0",
+    ghost: "text-ink underline decoration-rule underline-offset-4 hover:decoration-ink underline-offset-4 !px-0",
   }[kind];
   return (
     <button
@@ -188,7 +188,7 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
       <div className="rise relative max-h-[88dvh] w-full max-w-[620px] overflow-y-auto bg-card px-6 pb-12 pt-5 shadow-[0_30px_80px_rgba(0,0,0,0.25)] sm:px-10">
         <div className="sticky top-0 -mx-6 mb-6 flex items-center justify-between bg-card px-6 pb-3 pt-1 sm:-mx-10 sm:px-10">
           <h3 className="text-[22px] font-semibold tracking-[-0.02em]">{title}</h3>
-          <button type="button" onClick={onClose} className="py-1 text-[15px] font-medium text-act">
+          <button type="button" onClick={onClose} className="py-1 text-[15px] font-semibold text-ink">
             Done
           </button>
         </div>

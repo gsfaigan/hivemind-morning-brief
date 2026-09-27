@@ -39,9 +39,9 @@ export function Trust({ brief }: { brief: Brief }) {
 
       <Section label="Tonight's rules">
         <dl className="divide-y divide-rule bg-card px-6 sm:px-8">
-          <Rule k="Alone" tone="ok" v={`Refundable bookings that stay cancellable past 8 AM, up to ${money(brief.spend.preauth)}. Holds. Seats.`} />
+          <Rule k="Alone" tone="status" v={`Refundable bookings that stay cancellable past 8 AM, up to ${money(brief.spend.preauth)}. Holds. Seats.`} />
           <Rule k="Waits" tone="act" v={`Anything non-refundable, over ${money(brief.spend.preauth)}, or outside what you asked for.`} />
-          <Rule k="Never" tone="problem" v="Wakes you up." />
+          <Rule k="Never" tone="pick" v="Wakes you up." />
         </dl>
         <p className="mt-5 text-[14px] text-muted">
           Last night: inside the rules {kept} of {brief.actions.length} times. One miss, which it reported itself.
@@ -181,7 +181,7 @@ export function Trust({ brief }: { brief: Brief }) {
   );
 }
 
-function Rule({ k, v, tone }: { k: string; v: string; tone: "ok" | "act" | "problem" }) {
+function Rule({ k, v, tone }: { k: string; v: string; tone: "status" | "act" | "pick" }) {
   return (
     <div className="grid grid-cols-[72px_1fr] gap-4 py-5">
       <dt>

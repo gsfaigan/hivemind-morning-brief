@@ -65,7 +65,7 @@ export function Brief({ brief }: { brief: BriefT }) {
               <UpdateRow key={e.id} e={e} />
             ))}
           </Panel>
-          <Link href="/night" className="mt-6 inline-block text-[15px] text-act hover:underline">
+          <Link href="/night" className="mt-6 inline-block text-[15px] text-ink underline decoration-rule underline-offset-4 hover:decoration-ink">
             See the full night log
           </Link>
         </Section>
@@ -231,7 +231,7 @@ function TripCard({ brief }: { brief: BriefT }) {
     <Panel className="p-6 sm:p-10">
       <div className="flex items-baseline justify-between gap-4">
         <div className="text-[13px] font-semibold text-muted">Reading week</div>
-        <button type="button" onClick={() => setOpen(!open)} className="text-[14px] text-act hover:underline">
+        <button type="button" onClick={() => setOpen(!open)} className="text-[14px] text-ink underline decoration-rule underline-offset-4 hover:decoration-ink">
           {open ? "Hide breakdown" : "Breakdown"}
         </button>
       </div>
@@ -343,7 +343,7 @@ function ActionRow({ a, brief, onAudit }: { a: ActionView; brief: BriefT; onAudi
         {state === "undone" ? (
           <>
             <span className="text-bad">Cancellation in your reply</span>
-            <button type="button" onClick={keep} className="text-act hover:underline">
+            <button type="button" onClick={keep} className="text-ink underline decoration-rule underline-offset-4 hover:decoration-ink">
               Keep it
             </button>
           </>
@@ -361,7 +361,7 @@ function ActionRow({ a, brief, onAudit }: { a: ActionView; brief: BriefT; onAudi
                   "Can't be cancelled"
                 )}
               </span>
-              <button type="button" className="text-act hover:underline" onClick={() => setOpen(!open)}>
+              <button type="button" className="text-ink underline decoration-rule underline-offset-4 hover:decoration-ink" onClick={() => setOpen(!open)}>
                 {open ? "Less" : "Details"}
               </button>
             </span>
@@ -413,7 +413,7 @@ function AssumptionRow({ e }: { e: LogEvent }) {
     <div className="px-6 py-6 sm:px-8">
       <div className="flex items-start justify-between gap-4">
         <h3 className={`text-[18px] font-semibold leading-snug tracking-[-0.01em] ${cur?.choice ? "text-muted line-through decoration-muted" : ""}`}>{headline(e)}</h3>
-        <button type="button" onClick={() => setOpen(!open)} className="shrink-0 text-[14px] text-act hover:underline">
+        <button type="button" onClick={() => setOpen(!open)} className="shrink-0 text-[14px] text-ink underline decoration-rule underline-offset-4 hover:decoration-ink">
           {open ? "Hide" : "Why"}
         </button>
       </div>
