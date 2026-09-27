@@ -59,9 +59,8 @@ export function Night({ brief }: { brief: Brief }) {
           </div>
           <div className="h-px bg-rule" />
           <div className="num mt-2 flex justify-between text-[12px] text-muted">
-            {["12 AM", "2", "4", "6", "8 AM"].map((h) => (
-              <span key={h}>{h}</span>
-            ))}
+            <span>{clock(run.started_at)}</span>
+            <span>{clock(run.wake_at)}</span>
           </div>
           <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-muted">
             {(["decision", "would_book", "mistake", "assumption", "update"] as Kind[]).map((k) => (
