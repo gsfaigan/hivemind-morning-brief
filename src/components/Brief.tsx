@@ -77,13 +77,14 @@ export function Brief({ brief }: { brief: BriefT }) {
   );
 }
 
-const TICK: Record<Kind, string> = {
-  decision: "bg-act h-12",
-  would_book: "bg-ok h-9",
-  mistake: "bg-bad h-9",
-  assumption: "bg-warn h-6",
-  update: "bg-muted h-5",
-  search: "bg-rule h-3",
+// On vermilion, kinds are told apart by height and strength, not hue.
+export const TICK: Record<Kind, string> = {
+  decision: "bg-white h-12",
+  would_book: "bg-white/75 h-9",
+  mistake: "bg-[#1d1d1f] h-9",
+  assumption: "bg-white/50 h-6",
+  update: "bg-white/35 h-5",
+  search: "bg-white/20 h-3",
 };
 
 // The night, as a dark band: when Muse worked, what happened when, and the
@@ -99,17 +100,16 @@ function NightHero({ brief, onAudit }: { brief: BriefT; onAudit: () => void }) {
   const verified = brief.audit.claims.filter((c) => c.status === "verified").length;
 
   return (
-    <header className="night">
+    <header className="hero">
       <div className="mx-auto w-full max-w-[760px] px-5 sm:px-10">
         <Nav here="brief" date={day(run.wake_at)} />
 
         <div className="pb-14 pt-16 sm:pb-20 sm:pt-24">
-          {run.sample && <Tag tone="tradeoff">Sample data</Tag>}
-          <h1 className="rise mt-5 text-[44px] font-semibold leading-[1] tracking-[-0.04em] sm:text-[72px]">Good morning, Gabe.</h1>
+          <h1 className="rise text-[44px] font-semibold leading-[1] tracking-[-0.04em] sm:text-[72px]">Good morning, Gabe.</h1>
           <p className="rise mt-5 text-[20px] leading-snug text-ink-2 [animation-delay:80ms] sm:text-[24px]">
             {n ? (
               <>
-                <a href="#needs-you" className="text-act hover:underline">
+                <a href="#needs-you" className="font-semibold underline decoration-2 underline-offset-[6px]">
                   {countWord(n)} decision{n === 1 ? "" : "s"} need{n === 1 ? "s" : ""} you.
                 </a>{" "}
                 The rest is handled.
@@ -139,7 +139,7 @@ function NightHero({ brief, onAudit }: { brief: BriefT; onAudit: () => void }) {
             <div>
               <dt className="text-[13px] text-muted">Checked</dt>
               <dd className="mt-1">
-                <button type="button" onClick={onAudit} className="num text-[26px] font-semibold tracking-[-0.02em] hover:text-act sm:text-[32px]">
+                <button type="button" onClick={onAudit} className="num text-[26px] font-semibold tracking-[-0.02em] underline decoration-white/40 decoration-2 underline-offset-[6px] hover:decoration-white sm:text-[32px]">
                   {verified}/{brief.audit.claims.length}
                 </button>
               </dd>

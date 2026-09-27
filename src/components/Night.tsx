@@ -5,6 +5,7 @@ import type { Brief } from "@/lib/derive";
 import { clock, day, money, toCad } from "@/lib/format";
 import type { Kind } from "@/lib/types";
 import { AuditSheet } from "./AuditSheet";
+import { TICK } from "./Brief";
 import { AuditTag, DarkHeader, Glyph, Page } from "./ui";
 
 const FILTERS: { k: Kind | "all"; label: string }[] = [
@@ -53,8 +54,7 @@ export function Night({ brief }: { brief: Brief }) {
           <div className="relative h-12">
             {timeline.map((e) => {
               const x = ((new Date(e.ts).getTime() - t0) / (t1 - t0)) * 100;
-              const tall = e.kind === "decision" || e.kind === "mistake" || e.kind === "would_book";
-              return <span key={e.id} className={`absolute bottom-0 w-[3px] ${DOT[e.kind]} ${tall ? "h-11" : "h-5"}`} style={{ left: `${x}%` }} />;
+              return <span key={e.id} className={`absolute bottom-0 w-[3px] ${TICK[e.kind]}`} style={{ left: `${x}%` }} />;
             })}
           </div>
           <div className="h-px bg-rule" />
@@ -66,7 +66,7 @@ export function Night({ brief }: { brief: Brief }) {
           <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-muted">
             {(["decision", "would_book", "mistake", "assumption", "update"] as Kind[]).map((k) => (
               <span key={k} className="flex items-center gap-2">
-                <span className={`inline-block size-2.5 ${DOT[k]}`} /> {KIND_LABEL[k]}
+                <span className={`inline-block w-[3px] ${TICK[k].replace(/h-\d+/, "h-3.5")}`} /> {KIND_LABEL[k]}
               </span>
             ))}
           </div>

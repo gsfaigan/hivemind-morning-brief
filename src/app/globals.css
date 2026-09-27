@@ -83,7 +83,21 @@ body {
   color: var(--muted);
 }
 
-/* The night hero stays dark in both themes: it's the night. */
+/* The page-top band: vermilion in both themes. Near-white text only, since
+   white is the only colour that passes contrast on it. */
+.hero {
+  --ink: #ffffff;
+  --ink-2: #fff5f1;
+  --muted: #ffede6;
+  --rule: rgba(255, 255, 255, 0.35);
+  --act: #ffffff;
+  --fill: rgba(0, 0, 0, 0.14);
+  --card: #c23216;
+  background: #d93a1b;
+  color: var(--ink);
+}
+
+/* Dark surfaces (the floating reply bar) stay dark in both themes. */
 .night {
   --ink: #f5f5f7;
   --ink-2: #d1d1d6;

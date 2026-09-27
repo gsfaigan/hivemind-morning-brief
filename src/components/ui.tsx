@@ -125,7 +125,7 @@ export function Nav({ here, date }: { here: "brief" | "night" | "trust"; date: s
       <div className="flex gap-6 sm:gap-8">
         {items.map((i) =>
           i.k === here ? (
-            <span key={i.k} className="text-ink">{i.label}</span>
+            <span key={i.k} className="font-semibold text-ink underline decoration-2 underline-offset-[6px]">{i.label}</span>
           ) : (
             <Link key={i.k} href={i.href} className="text-muted transition-colors hover:text-ink">{i.label}</Link>
           ),
@@ -135,10 +135,10 @@ export function Nav({ here, date }: { here: "brief" | "night" | "trust"; date: s
   );
 }
 
-// The dark band every page opens with.
+// The vermilion band every page opens with.
 export function DarkHeader({ here, date, children }: { here: "brief" | "night" | "trust"; date: string; children: React.ReactNode }) {
   return (
-    <header className="night">
+    <header className="hero">
       <div className="mx-auto w-full max-w-[760px] px-5 sm:px-10">
         <Nav here={here} date={date} />
         <div className="pb-14 pt-16 sm:pb-20 sm:pt-24">{children}</div>
