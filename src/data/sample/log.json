@@ -1,0 +1,459 @@
+[
+  {
+    "id": "e01",
+    "ts": "2026-09-28T00:04:00-04:00",
+    "kind": "assumption",
+    "thread": "budget",
+    "agent": "muse",
+    "title": "Reading $1,500 as CAD, covering flights, trains and beds — not food",
+    "detail": "You didn't say. Toronto origin and a Canadian card, so CAD. Food and local transit are left out; I'll estimate them separately at about $45/day.",
+    "alternatives": [
+      "USD, transport + beds",
+      "CAD, everything incl. food"
+    ],
+    "confidence": "med"
+  },
+  {
+    "id": "e02",
+    "ts": "2026-09-28T00:06:00-04:00",
+    "kind": "assumption",
+    "thread": "plan",
+    "agent": "muse",
+    "title": "Splitting the week 4 nights NYC, 4 nights Boston",
+    "detail": "Oct 10–14 New York, Oct 14–18 Boston. You asked me to propose a split; even is the default until you tell me which city matters more.",
+    "alternatives": [
+      "5 NYC / 3 Boston",
+      "3 NYC / 5 Boston"
+    ],
+    "confidence": "low"
+  },
+  {
+    "id": "e03",
+    "ts": "2026-09-28T00:09:00-04:00",
+    "kind": "assumption",
+    "thread": "out",
+    "agent": "muse",
+    "title": "Skipping Buffalo — it doesn't actually save money",
+    "detail": "BUF→NYC fares were $40–60 cheaper, but the 2h drive plus ~$60 parking (from your profile) wipes that out.",
+    "alternatives": [
+      "Include Buffalo anyway"
+    ],
+    "confidence": "high"
+  },
+  {
+    "id": "e04",
+    "ts": "2026-09-28T00:22:00-04:00",
+    "kind": "search",
+    "thread": "out",
+    "agent": "muse",
+    "title": "Compared 23 Toronto → New York fares for Sat Oct 10",
+    "detail": "YYZ and YTZ to LGA, JFK and EWR. Cheapest by far are before 8 AM."
+  },
+  {
+    "id": "e05",
+    "ts": "2026-09-28T00:48:00-04:00",
+    "kind": "mistake",
+    "thread": "out",
+    "agent": "muse",
+    "title": "I logged the Porter fare as leaving from Pearson — it's Billy Bishop",
+    "detail": "Caught it on a re-check. Porter flies out of YTZ, downtown. That's actually closer to you from Union. Price didn't change.",
+    "confidence": "high"
+  },
+  {
+    "id": "e06",
+    "ts": "2026-09-28T01:12:00-04:00",
+    "kind": "would_book",
+    "thread": "out",
+    "agent": "muse",
+    "title": "Reserved Porter 6:50 AM, Billy Bishop → Newark, window 14A",
+    "detail": "You said any time is fine if it's cheaper. The 12:10 PM Air Canada is +$140 — I didn't think a later wake-up was worth that. Free cancel for 24h.",
+    "options": [
+      {
+        "label": "Porter PD 2113 · 6:50 AM YTZ → EWR",
+        "price": 214,
+        "currency": "CAD",
+        "refundable": true,
+        "cancel_by": "2026-09-29T01:12:00-04:00",
+        "source_url": "https://www.flyporter.com/en-ca/",
+        "checked_at": "2026-09-28T01:10:00-04:00",
+        "facts": {
+          "depart": "06:50",
+          "arrive": "08:22",
+          "window_seat": true
+        }
+      },
+      {
+        "label": "Air Canada AC 716 · 12:10 PM YYZ → LGA",
+        "price": 354,
+        "currency": "CAD",
+        "refundable": true,
+        "source_url": "https://www.aircanada.com/",
+        "checked_at": "2026-09-28T01:02:00-04:00",
+        "facts": {
+          "depart": "12:10",
+          "arrive": "13:41",
+          "window_seat": true
+        }
+      }
+    ],
+    "recommended": "Porter PD 2113 · 6:50 AM YTZ → EWR",
+    "reversible": true,
+    "confidence": "high"
+  },
+  {
+    "id": "e07",
+    "ts": "2026-09-28T01:40:00-04:00",
+    "kind": "search",
+    "thread": "nyc-stay",
+    "agent": "muse",
+    "title": "Compared 31 places to sleep in New York, Oct 10–14",
+    "detail": "Hotels, hostels and pods within an hour of Midtown."
+  },
+  {
+    "id": "e08",
+    "ts": "2026-09-28T02:05:00-04:00",
+    "kind": "decision",
+    "thread": "nyc-stay",
+    "agent": "muse",
+    "title": "New York: the cheap room is 42 minutes out",
+    "detail": "The Newark hotel is $52 cheaper on paper, but after NJ Transit fares it's about $13 more than the hostel and costs ~5 hours of the trip on trains. Dorm vs. private room is your call.",
+    "options": [
+      {
+        "label": "HI New York City Hostel · 6-bed dorm, Upper West Side",
+        "price": 348,
+        "currency": "CAD",
+        "refundable": true,
+        "cancel_by": "2026-10-08T23:59:00-04:00",
+        "source_url": "https://www.hiusa.org/find-hostels/new-york/new-york-city",
+        "checked_at": "2026-09-28T01:58:00-04:00",
+        "facts": {
+          "nights": 4,
+          "commute_min": 20
+        }
+      },
+      {
+        "label": "Holiday Inn Express Newark Airport · private room",
+        "price": 296,
+        "currency": "CAD",
+        "refundable": true,
+        "cancel_by": "2026-10-09T18:00:00-04:00",
+        "source_url": "https://www.ihg.com/holidayinnexpress/hotels/us/en/newark/",
+        "checked_at": "2026-09-28T01:55:00-04:00",
+        "note": "+ ~$65 NJ Transit over 4 days",
+        "facts": {
+          "nights": 4,
+          "commute_min": 42
+        }
+      },
+      {
+        "label": "Pod 51 · private pod, Midtown East",
+        "price": 798,
+        "currency": "CAD",
+        "refundable": true,
+        "source_url": "https://www.thepodhotel.com/pod-51",
+        "checked_at": "2026-09-28T02:01:00-04:00",
+        "facts": {
+          "nights": 4,
+          "commute_min": 5
+        }
+      }
+    ],
+    "recommended": "HI New York City Hostel · 6-bed dorm, Upper West Side",
+    "reversible": true,
+    "confidence": "med"
+  },
+  {
+    "id": "e09",
+    "ts": "2026-09-28T02:20:00-04:00",
+    "kind": "update",
+    "thread": "seats",
+    "agent": "muse",
+    "title": "Amtrak doesn't assign seats on the Northeast Regional",
+    "detail": "Can't guarantee a window NYC → Boston. Board early at Moynihan and sit on the right side for the water views after New Haven."
+  },
+  {
+    "id": "e10",
+    "ts": "2026-09-28T02:24:00-04:00",
+    "kind": "would_book",
+    "thread": "nyc-bos",
+    "agent": "muse",
+    "title": "Reserved Amtrak 10:02 AM, New York → Boston, Wed Oct 14",
+    "detail": "Train beats the bus by an hour for $33 more, and beats flying once you count the airport. $49 USD ≈ $67 CAD.",
+    "options": [
+      {
+        "label": "Amtrak Northeast Regional 171 · 10:02 AM NYP → BOS",
+        "price": 49,
+        "currency": "USD",
+        "refundable": true,
+        "cancel_by": "2026-09-29T02:24:00-04:00",
+        "source_url": "https://www.amtrak.com/",
+        "checked_at": "2026-09-28T02:18:00-04:00",
+        "facts": {
+          "depart": "10:02",
+          "arrive": "14:10",
+          "duration_min": 248,
+          "window_seat": null
+        }
+      },
+      {
+        "label": "FlixBus · 9:30 AM Port Authority → South Station",
+        "price": 25,
+        "currency": "USD",
+        "refundable": false,
+        "source_url": "https://www.flixbus.com/",
+        "checked_at": "2026-09-28T02:12:00-04:00",
+        "facts": {
+          "depart": "09:30",
+          "arrive": "14:05",
+          "duration_min": 275
+        }
+      },
+      {
+        "label": "Acela 2153 · 10:00 AM NYP → BOS",
+        "price": 137,
+        "currency": "USD",
+        "refundable": true,
+        "source_url": "https://www.amtrak.com/",
+        "checked_at": "2026-09-28T02:18:00-04:00",
+        "facts": {
+          "duration_min": 215
+        }
+      }
+    ],
+    "recommended": "Amtrak Northeast Regional 171 · 10:02 AM NYP → BOS",
+    "reversible": true,
+    "confidence": "high"
+  },
+  {
+    "id": "e11",
+    "ts": "2026-09-28T02:40:00-04:00",
+    "kind": "update",
+    "thread": "bos-stay",
+    "agent": "muse",
+    "title": "Boston is pricey Oct 17–18: Head of the Charles regatta",
+    "detail": "Median hostel bed is ~$96 USD that weekend vs ~$61 the weekend before. Booking early matters here."
+  },
+  {
+    "id": "e12",
+    "ts": "2026-09-28T02:58:00-04:00",
+    "kind": "would_book",
+    "thread": "bos-stay",
+    "agent": "muse",
+    "title": "Reserved HI Boston, 4 nights, Oct 14–18",
+    "detail": "Cheapest bed within walking distance of the T. Free cancellation until Oct 12, so this was inside your overnight rules.",
+    "options": [
+      {
+        "label": "HI Boston · 4-bed dorm, Chinatown",
+        "price": 461,
+        "currency": "CAD",
+        "refundable": true,
+        "cancel_by": "2026-10-12T23:59:00-04:00",
+        "source_url": "https://www.hiusa.org/find-hostels/massachusetts/boston",
+        "checked_at": "2026-09-28T02:55:00-04:00",
+        "facts": {
+          "nights": 4,
+          "commute_min": 10
+        }
+      }
+    ],
+    "recommended": "HI Boston · 4-bed dorm, Chinatown",
+    "reversible": true,
+    "confidence": "high"
+  },
+  {
+    "id": "e13",
+    "ts": "2026-09-28T03:05:00-04:00",
+    "kind": "search",
+    "thread": "return",
+    "agent": "muse",
+    "title": "Compared 40 Boston → Toronto options for Sun Oct 18",
+    "detail": "Direct flights all start around $389. Everything cheaper connects."
+  },
+  {
+    "id": "e14",
+    "ts": "2026-09-28T03:12:00-04:00",
+    "kind": "decision",
+    "thread": "return",
+    "agent": "muse",
+    "title": "The only return under budget has a 6-hour layover",
+    "detail": "With everything else, a direct flight puts you ~$37 over $1,500. I put a free 24h hold on the layover fare so it can't disappear, and kept searching. You pick.",
+    "options": [
+      {
+        "label": "American via Philadelphia · 7:05 AM → 4:40 PM",
+        "price": 198,
+        "currency": "CAD",
+        "refundable": true,
+        "held": true,
+        "cancel_by": "2026-09-29T03:12:00-04:00",
+        "source_url": "https://www.kayak.com/flights/BOS-YYZ/2026-10-18",
+        "checked_at": "2026-09-28T03:10:00-04:00",
+        "facts": {
+          "depart": "07:05",
+          "arrive": "16:40",
+          "layover_min": 370,
+          "window_seat": true
+        }
+      },
+      {
+        "label": "Air Canada direct · 5:30 PM → 7:15 PM",
+        "price": 389,
+        "currency": "CAD",
+        "refundable": true,
+        "source_url": "https://www.aircanada.com/",
+        "checked_at": "2026-09-28T03:08:00-04:00",
+        "facts": {
+          "depart": "17:30",
+          "arrive": "19:15",
+          "window_seat": true
+        }
+      },
+      {
+        "label": "Porter direct · 1:15 PM → Billy Bishop 3:05 PM",
+        "price": 402,
+        "currency": "CAD",
+        "refundable": true,
+        "source_url": "https://www.flyporter.com/en-ca/",
+        "checked_at": "2026-09-28T03:09:00-04:00",
+        "facts": {
+          "depart": "13:15",
+          "arrive": "15:05",
+          "window_seat": true
+        }
+      }
+    ],
+    "recommended": "American via Philadelphia · 7:05 AM → 4:40 PM",
+    "expires_at": "2026-09-29T03:12:00-04:00",
+    "reversible": true,
+    "confidence": "med"
+  },
+  {
+    "id": "e15",
+    "ts": "2026-09-28T03:20:00-04:00",
+    "kind": "update",
+    "thread": "out",
+    "agent": "muse",
+    "title": "I let a $179 WestJet flash fare expire at 3:40 AM",
+    "detail": "It was $35 cheaper than your Porter seat, but non-refundable with no seat selection (so no window). Your rules don't let me lock a non-refundable fare while you sleep. Cost of waiting: $35.",
+    "options": [
+      {
+        "label": "WestJet WS 1210 · 8:15 AM YYZ → LGA (expired)",
+        "price": 179,
+        "currency": "CAD",
+        "refundable": false,
+        "source_url": "https://www.westjet.com/",
+        "checked_at": "2026-09-28T03:18:00-04:00",
+        "facts": {
+          "depart": "08:15",
+          "window_seat": false
+        }
+      }
+    ],
+    "lost_savings_cad": 35,
+    "confidence": "high"
+  },
+  {
+    "id": "e16",
+    "ts": "2026-09-28T04:10:00-04:00",
+    "kind": "mistake",
+    "thread": "bos-stay",
+    "agent": "muse",
+    "title": "Boston hostel is $512, not $461 — I missed taxes and fees",
+    "detail": "The listing showed $461; checkout adds Boston room tax and a booking fee. That puts overnight reservations at $793, $43 past the $750 you allowed me without asking. I should have checked checkout totals first. It's still free to cancel.",
+    "options": [
+      {
+        "label": "HI Boston · 4-bed dorm, Chinatown (with taxes)",
+        "price": 512,
+        "currency": "CAD",
+        "refundable": true,
+        "cancel_by": "2026-10-12T23:59:00-04:00",
+        "source_url": "https://www.hiusa.org/find-hostels/massachusetts/boston",
+        "checked_at": "2026-09-28T04:08:00-04:00",
+        "facts": {
+          "nights": 4
+        }
+      }
+    ],
+    "confidence": "high",
+    "corrects": "e12"
+  },
+  {
+    "id": "e17",
+    "ts": "2026-09-28T04:45:00-04:00",
+    "kind": "search",
+    "thread": "return",
+    "agent": "muse",
+    "title": "Checked Providence and Manchester airports for the return",
+    "detail": "PVD → YYZ saves $22 but needs a $39 train to Providence. Not worth it."
+  },
+  {
+    "id": "e18",
+    "ts": "2026-09-28T05:40:00-04:00",
+    "kind": "update",
+    "thread": "return",
+    "agent": "muse",
+    "title": "New option: overnight bus Boston → Toronto, $119",
+    "detail": "Leaves Sat Oct 17 at 10:30 PM, arrives Toronto 9:55 AM Sunday. 13.5 hours, but you'd skip the last hostel night (~$128 back). Added to your return decision.",
+    "options": [
+      {
+        "label": "FlixBus overnight · Sat 10:30 PM → Sun 9:55 AM",
+        "price": 119,
+        "currency": "CAD",
+        "refundable": false,
+        "source_url": null,
+        "checked_at": "2026-09-28T05:36:00-04:00",
+        "note": "frees up the Oct 17 hostel night (~$128)",
+        "facts": {
+          "depart": "22:30",
+          "arrive": "09:55",
+          "duration_min": 805
+        }
+      }
+    ],
+    "confidence": "med",
+    "updates": "e14"
+  },
+  {
+    "id": "e19",
+    "ts": "2026-09-28T06:15:00-04:00",
+    "kind": "update",
+    "thread": "seats",
+    "agent": "muse",
+    "title": "Window seats: 1 of 3 legs locked",
+    "detail": "14A on the Porter flight. Amtrak is unassigned. The return depends on which option you pick; all three flights still have windows."
+  },
+  {
+    "id": "e20",
+    "ts": "2026-09-28T07:30:00-04:00",
+    "kind": "update",
+    "thread": "return",
+    "agent": "muse",
+    "title": "Re-checked return fares: the direct went up $23",
+    "detail": "Air Canada direct is now $412 (was $389 at 3:08 AM). The layover hold is unchanged at $198.",
+    "options": [
+      {
+        "label": "Air Canada direct · 5:30 PM → 7:15 PM",
+        "price": 412,
+        "currency": "CAD",
+        "refundable": true,
+        "source_url": "https://www.aircanada.com/",
+        "checked_at": "2026-09-28T07:28:00-04:00",
+        "facts": {
+          "depart": "17:30",
+          "arrive": "19:15",
+          "window_seat": true
+        }
+      }
+    ],
+    "confidence": "high",
+    "updates": "e14"
+  },
+  {
+    "id": "e21",
+    "ts": "2026-09-28T07:48:00-04:00",
+    "kind": "update",
+    "thread": "other",
+    "agent": "muse",
+    "title": "Done for the night",
+    "detail": "214 searches over 7h 44m. Three things reserved (all free to cancel), one fare on hold, two decisions waiting for you."
+  }
+]

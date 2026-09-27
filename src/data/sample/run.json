@@ -1,0 +1,10 @@
+{
+  "agent": "Muse",
+  "started_at": "2026-09-28T00:02:00-04:00",
+  "ended_at": "2026-09-28T07:48:00-04:00",
+  "wake_at": "2026-09-28T08:00:00-04:00",
+  "task": "Book my reading week trip - going from Toronto to New York to Boston and back, leaving October 10, home by October 18, under $1,500 total, find window seats where you can.",
+  "budget_cad": 1500,
+  "preauth_cad": 750,
+  "sample": true
+}

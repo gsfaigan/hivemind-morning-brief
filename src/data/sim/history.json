@@ -1,0 +1,29 @@
+{
+  "note": "Simulated. Only trip 1 is real (the overnight Muse run). Trips 2-10 show how the same rules would play out over a year of trips.",
+  "trips": [
+    { "n": 1, "name": "Reading week: Toronto → NYC → Boston", "asked": 5, "auto": 3, "overrides": 0, "caught": 3, "preauth": 750, "real": true },
+    { "n": 2, "name": "Montreal weekend", "asked": 4, "auto": 3, "overrides": 1, "caught": 1, "preauth": 750 },
+    { "n": 3, "name": "Co-op interview, Vancouver", "asked": 4, "auto": 5, "overrides": 1, "caught": 2, "preauth": 800 },
+    { "n": 4, "name": "Family, Ottawa", "asked": 2, "auto": 4, "overrides": 0, "caught": 0, "preauth": 900 },
+    { "n": 5, "name": "Chicago with friends", "asked": 3, "auto": 6, "overrides": 1, "caught": 1, "preauth": 1000 },
+    { "n": 6, "name": "Spring break, Mexico City", "asked": 6, "auto": 3, "overrides": 2, "caught": 2, "preauth": 750, "event": "Muse booked a hotel for the wrong month. Lodging went back to asking first, and the limit reset to $750." },
+    { "n": 7, "name": "Summer co-op move, SF", "asked": 4, "auto": 6, "overrides": 1, "caught": 1, "preauth": 750 },
+    { "n": 8, "name": "Wedding, Halifax", "asked": 2, "auto": 7, "overrides": 0, "caught": 1, "preauth": 900 },
+    { "n": 9, "name": "Thanksgiving home", "asked": 1, "auto": 5, "overrides": 0, "caught": 0, "preauth": 1000 },
+    { "n": 10, "name": "Winter term start, NYC", "asked": 1, "auto": 8, "overrides": 0, "caught": 1, "preauth": 1100 }
+  ],
+  "categories": [
+    { "name": "Flights", "trip1": "Reserve alone if refundable, cancel window past wake-up, within limit", "trip10": "Books alone up to $450 if refundable", "evidence": "You kept 17 of 19 flight picks" },
+    { "name": "Beds", "trip1": "Same rule as flights", "trip10": "Asks first when it's dorm vs. private", "evidence": "You changed 5 of 11; lost autonomy after the wrong-month booking" },
+    { "name": "Trains & buses", "trip1": "Same rule as flights", "trip10": "Books alone", "evidence": "Kept 8 of 8" },
+    { "name": "Seats", "trip1": "Picks window where free", "trip10": "Picks alone, pays up to $25 for a window", "evidence": "Never overridden" },
+    { "name": "Non-refundable anything", "trip1": "Always waits for you", "trip10": "Always waits for you", "evidence": "Fixed. Irreversible spend never becomes automatic." }
+  ],
+  "learned": [
+    { "trip": 1, "rule": "Budgets are CAD and cover transport + beds, not food" },
+    { "trip": 2, "rule": "Layovers over 4h are a dealbreaker if the fix costs under $200" },
+    { "trip": 3, "rule": "Private room when it's under $25/night more than a dorm" },
+    { "trip": 5, "rule": "Before 7 AM is fine only if it saves $100+" },
+    { "trip": 6, "rule": "Double-check dates against the calendar before any hold" }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-09-28T07:55:00-04:00",
+  "model": "gemini-2.5-flash",
+  "claims": [
+    { "event_id": "e06", "option_label": "Porter PD 2113 · 6:50 AM YTZ → EWR", "claim": "$214 CAD, free 24h cancel", "status": "verified", "observed": "$214", "checked_at": "2026-09-28T07:52:00-04:00", "note": "Same fare on flyporter.com at 7:52 AM." },
+    { "event_id": "e08", "option_label": "HI New York City Hostel · 6-bed dorm, Upper West Side", "claim": "$348 CAD for 4 nights", "status": "verified", "observed": "$351", "checked_at": "2026-09-28T07:53:00-04:00", "note": "$3 higher now. Dorm is mixed-gender; Muse didn't mention that." },
+    { "event_id": "e08", "option_label": "Holiday Inn Express Newark Airport · private room", "claim": "42 min to Midtown", "status": "verified", "observed": "38–55 min", "checked_at": "2026-09-28T07:53:00-04:00", "note": "Depends on the shuttle + NJ Transit connection. 42 is a fair middle." },
+    { "event_id": "e10", "option_label": "Amtrak Northeast Regional 171 · 10:02 AM NYP → BOS", "claim": "$49 USD ≈ $67 CAD", "status": "verified", "observed": "$49 USD", "checked_at": "2026-09-28T07:54:00-04:00", "note": "Conversion at 1.37 checks out." },
+    { "event_id": "e16", "option_label": "HI Boston · 4-bed dorm, Chinatown (with taxes)", "claim": "$512 CAD with taxes", "status": "verified", "observed": "$512", "checked_at": "2026-09-28T07:54:00-04:00", "note": "Correction holds. The original $461 was pre-tax." },
+    { "event_id": "e14", "option_label": "American via Philadelphia · 7:05 AM → 4:40 PM", "claim": "$198 CAD, held 24h", "status": "conflict", "observed": "$204 on aa.com", "checked_at": "2026-09-28T07:55:00-04:00", "note": "Muse's price came from Kayak. The airline's own site is $6 higher. Holds are made on the airline, so expect $204." },
+    { "event_id": "e18", "option_label": "FlixBus overnight · Sat 10:30 PM → Sun 9:55 AM", "claim": "$119 CAD overnight bus", "status": "unsourced", "checked_at": "2026-09-28T07:55:00-04:00", "note": "No link in the log. Muse gave a route when asked, but it has a transfer in Buffalo that it didn't mention." },
+    { "event_id": "e15", "option_label": "WestJet WS 1210 · 8:15 AM YYZ → LGA (expired)", "claim": "$179 flash fare, expired 3:40 AM", "status": "unverifiable", "checked_at": "2026-09-28T07:55:00-04:00", "note": "Fare is gone, so it can't be re-checked. WestJet's current price for this flight is $241." }
+  ],
+  "interrogations": [
+    { "id": "q1", "event_id": "e14", "at": "2026-09-28T07:56:00-04:00", "asker": "auditor", "target": "web", "q": "Is the $198 layover fare on the airline's own site?", "a": "aa.com shows $204 CAD for the same flights.", "verdict": "conflict" },
+    { "id": "q2", "event_id": "e14", "at": "2026-09-28T07:57:00-04:00", "asker": "auditor", "target": "muse", "q": "Your hold on the layover fare: is it placed with American, or on Kayak?", "a": "With American directly, 24h courtesy hold. Their price at hold time was $204 — I logged Kayak's number by mistake.", "verdict": "conflict" },
+    { "id": "q3", "event_id": "e18", "at": "2026-09-28T07:58:00-04:00", "asker": "auditor", "target": "muse", "q": "The $119 overnight bus has no source link. Where did it come from, and is it direct?", "a": "FlixBus app. It isn't direct — 50 min transfer in Buffalo at 5:10 AM. I should have said.", "verdict": "unsourced" },
+    { "id": "q4", "event_id": "e08", "at": "2026-09-28T07:58:00-04:00", "asker": "auditor", "target": "web", "q": "Is the HI NYC dorm single-gender or mixed?", "a": "Offers both; the $348 rate is a mixed 6-bed dorm. Female-only dorm is $372.", "verdict": "verified" },
+    { "id": "q5", "event_id": "e16", "at": "2026-09-28T07:59:00-04:00", "asker": "auditor", "target": "muse", "q": "Did any other reservation go through without a checkout total?", "a": "No. I re-checked Porter and Amtrak at checkout; both prices include taxes.", "verdict": "verified" }
+  ]
+}
