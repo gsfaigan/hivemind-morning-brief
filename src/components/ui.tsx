@@ -1,22 +1,24 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect } from "react";
+import { ampm } from "@/lib/format";
 import type { Flag } from "@/lib/derive";
 import type { AuditStatus } from "@/lib/types";
 
-type Tone = "act" | "ok" | "warn" | "bad" | "info" | "ink";
+type Tone = "problem" | "tradeoff" | "status" | "pick" | "ok" | "act";
 
 const toneCls: Record<Tone, string> = {
-  act: "bg-act-bg text-act",
+  problem: "bg-bad-bg text-bad",
+  tradeoff: "bg-warn-bg text-warn",
+  status: "border border-rule text-ink-2",
+  pick: "bg-ink text-paper",
   ok: "bg-ok-bg text-ok",
-  warn: "bg-warn-bg text-warn",
-  bad: "bg-bad-bg text-bad",
-  info: "bg-transparent text-muted border border-rule",
-  ink: "bg-ink text-paper",
+  act: "bg-act-bg text-act",
 };
 
-export function Tag({ tone = "info", children, onClick }: { tone?: Tone; children: React.ReactNode; onClick?: () => void }) {
-  const cls = `inline-flex items-center gap-1 px-1.5 py-[2px] text-[11px] font-medium leading-4 whitespace-nowrap ${toneCls[tone]}`;
+export function Tag({ tone = "status", children, onClick }: { tone?: Tone; children: React.ReactNode; onClick?: () => void }) {
+  const cls = `inline-flex items-center px-2 py-[3px] text-[12px] font-medium leading-4 whitespace-nowrap ${toneCls[tone]}`;
   if (onClick)
     return (
       <button type="button" onClick={onClick} className={`${cls} underline-offset-2 hover:underline`}>
@@ -26,16 +28,20 @@ export function Tag({ tone = "info", children, onClick }: { tone?: Tone; childre
   return <span className={cls}>{children}</span>;
 }
 
-export function FlagTag({ f }: { f: Flag }) {
-  return <Tag tone={f.level === "bad" ? "bad" : f.level === "warn" ? "warn" : "info"}>{f.text}</Tag>;
+export function FlagTag({ f, onClick }: { f: Flag; onClick?: () => void }) {
+  return (
+    <Tag tone={f.kind} onClick={onClick}>
+      {f.text}
+    </Tag>
+  );
 }
 
 const auditMeta: Record<AuditStatus, { tone: Tone; label: string }> = {
-  verified: { tone: "ok", label: "Verified" },
-  conflict: { tone: "bad", label: "Conflict" },
-  unsourced: { tone: "bad", label: "Unsourced" },
-  stale: { tone: "warn", label: "Stale" },
-  unverifiable: { tone: "info", label: "Can't verify" },
+  verified: { tone: "status", label: "Verified" },
+  conflict: { tone: "problem", label: "Conflict" },
+  unsourced: { tone: "problem", label: "Unverified" },
+  stale: { tone: "tradeoff", label: "Stale" },
+  unverifiable: { tone: "status", label: "Can't verify" },
 };
 
 export function AuditTag({ status, onClick }: { status: AuditStatus; onClick?: () => void }) {
@@ -61,16 +67,66 @@ export function Section({
   id?: string;
 }) {
   return (
-    <section id={id} className="mt-10 scroll-mt-4">
-      <div className="flex items-baseline justify-between border-t border-rule-strong pt-2 pb-3">
+    <section id={id} className="mt-16 scroll-mt-6 sm:mt-24">
+      <div className="mb-5 flex items-baseline justify-between border-t border-rule-strong pt-3">
         <h2 className="eyebrow !text-ink">
           {label}
-          {count !== undefined && <span className="num ml-1.5 text-muted">{count}</span>}
+          {count !== undefined && <span className="num ml-2 text-muted">{count}</span>}
         </h2>
-        {aside && <div className="text-[12px] text-muted">{aside}</div>}
+        {aside && <div className="text-[13px] text-muted">{aside}</div>}
       </div>
       {children}
     </section>
+  );
+}
+
+// Departure over arrival, like a boarding pass.
+export function Route({ from, to, depart, arrive }: { from?: string; to?: string; depart?: string; arrive?: string }) {
+  if (!from && !depart) return null;
+  return (
+    <div className="flex gap-3 text-[14px]">
+      <div className="flex flex-col items-center py-[7px]" aria-hidden>
+        <span className="size-[7px] bg-ink" />
+        <span className="my-1 w-px flex-1 bg-rule" />
+        <span className="size-[7px] border border-ink" />
+      </div>
+      <div className="space-y-1.5">
+        <div>
+          {depart && <span className="num mr-2 font-medium">{ampm(depart)}</span>}
+          <span className="text-ink-2">{from}</span>
+        </div>
+        <div>
+          {arrive && <span className="num mr-2 font-medium">{ampm(arrive)}</span>}
+          <span className="text-ink-2">{to}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function Page({ children }: { children: React.ReactNode }) {
+  return <div className="mx-auto w-full max-w-[720px] px-5 pb-44 pt-8 sm:px-10 sm:pt-14">{children}</div>;
+}
+
+export function Nav({ here, date }: { here: "brief" | "night" | "trust"; date: string }) {
+  const items = [
+    { k: "brief", href: "/", label: "Brief" },
+    { k: "night", href: "/night", label: "Night log" },
+    { k: "trust", href: "/trust", label: "Trust" },
+  ] as const;
+  return (
+    <nav className="flex items-center justify-between text-[14px]">
+      <span className="eyebrow">{date}</span>
+      <div className="flex gap-5 sm:gap-7">
+        {items.map((i) =>
+          i.k === here ? (
+            <span key={i.k} className="text-ink">{i.label}</span>
+          ) : (
+            <Link key={i.k} href={i.href} className="text-muted hover:text-ink">{i.label}</Link>
+          ),
+        )}
+      </div>
+    </nav>
   );
 }
 
@@ -89,7 +145,7 @@ export function Btn({
   return (
     <button
       type="button"
-      className={`inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-[14px] font-medium transition-colors disabled:opacity-40 disabled:pointer-events-none ${k} ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-[14.5px] font-medium transition-colors disabled:opacity-40 disabled:pointer-events-none ${k} ${className}`}
       {...rest}
     >
       {children}
@@ -112,8 +168,8 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-label={title}>
       <button type="button" aria-label="Close" className="absolute inset-0 bg-ink/40" onClick={onClose} />
-      <div className="relative max-h-[85dvh] w-full max-w-[480px] overflow-y-auto border-t border-rule-strong bg-paper px-4 pb-8 pt-3 sm:border">
-        <div className="sticky top-0 -mx-4 mb-3 flex items-center justify-between border-b border-rule bg-paper px-4 pb-2">
+      <div className="relative max-h-[85dvh] w-full max-w-[600px] overflow-y-auto border-t border-rule-strong bg-paper px-5 pb-10 pt-4 sm:border sm:px-8">
+        <div className="sticky top-0 -mx-5 mb-5 flex items-center justify-between border-b border-rule bg-paper px-5 pb-3 sm:-mx-8 sm:px-8">
           <h3 className="text-[15px] font-semibold">{title}</h3>
           <button type="button" onClick={onClose} className="px-2 py-1 text-[13px] text-muted hover:text-ink">
             Close

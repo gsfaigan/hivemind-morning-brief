@@ -1,7 +1,7 @@
 "use client";
 
 import type { Brief } from "./derive";
-import { money, minutes } from "./format";
+import { ampm, money, minutes } from "./format";
 import { useStore } from "./store";
 
 export interface Proposal {
@@ -46,7 +46,7 @@ export function useProposals(brief: Brief): Proposal[] {
       out.push({
         id: `pref:${d.event.id}`,
         because: `You chose ${st.choice} over Muse's pick.`,
-        rule: `Weigh this the way you did: ${d.event.title.toLowerCase()}. Muse asks once more before it's automatic.`,
+        rule: `Next time, lean toward ${st.choice}.`,
       });
     }
   }
@@ -57,7 +57,7 @@ export function useProposals(brief: Brief): Proposal[] {
     if (dep && dep < "07:00") {
       out.push({
         id: `early:${a.event.id}`,
-        because: `You cancelled the ${a.option.label.split("·")[1]?.trim() ?? "early"} flight Muse picked because it was cheaper.`,
+        because: `You cancelled the ${ampm(dep)} flight Muse picked to save money.`,
         rule: "No departures before 7 AM unless it saves $100+.",
       });
     } else {

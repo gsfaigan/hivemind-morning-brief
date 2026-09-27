@@ -1,4 +1,4 @@
-import { toCad, money, minutes, clock } from "./format";
+import { ampm, clock, minutes, money, toCad } from "./format";
 import type { Audit, AuditClaim, LogEvent, Option, Run } from "./types";
 
 export interface PricePoint {
@@ -6,8 +6,9 @@ export interface PricePoint {
   at: string;
 }
 
+// Three kinds only: something may be wrong, something you give up, or plain state.
 export interface Flag {
-  level: "bad" | "warn" | "info";
+  kind: "problem" | "tradeoff" | "status";
   text: string;
 }
 
@@ -54,33 +55,31 @@ export interface Brief {
     pending: number; // recommended picks on open decisions
     preauthBreached: boolean;
   };
-  checkFirst: { level: Flag["level"]; text: string; event_id: string }[];
+  // Mistakes and lapsed fares that belong to a leg but aren't a correction of
+  // a specific booking. They show on that leg's card, not in a separate list.
+  threadNotes: Record<string, LogEvent[]>;
+  problemCount: number;
 }
 
 const baseLabel = (l: string) => l.replace(/\s*\((?:with taxes|expired)\)\s*$/i, "").trim();
 
-const ampm = (hhmm: string) => {
-  const [h, m] = hhmm.split(":").map(Number);
-  return `${((h + 11) % 12) + 1}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
-};
 
 function optionFlags(o: OptionView): Flag[] {
   const f: Flag[] = [];
   const x = o.facts ?? {};
-  if (x.depart && x.depart < "07:00") f.push({ level: "warn", text: `${ampm(x.depart)} departure` });
-  if (x.layover_min && x.layover_min >= 240) f.push({ level: "warn", text: `${minutes(x.layover_min)} layover` });
-  if (x.duration_min && x.duration_min >= 600) f.push({ level: "warn", text: `${minutes(x.duration_min)} trip` });
-  if (x.commute_min && x.commute_min >= 35) f.push({ level: "warn", text: `${x.commute_min} min from the sights` });
-  if (o.refundable === false) f.push({ level: "info", text: "Non-refundable" });
-  if (x.window_seat === false) f.push({ level: "info", text: "No window seat" });
-  if (!o.source_url) f.push({ level: "bad", text: "No source link" });
+  if (o.audit?.status === "conflict") f.push({ kind: "problem", text: "Conflict" });
+  else if (o.audit?.status === "unsourced") f.push({ kind: "problem", text: "Unverified" });
+  else if (!o.source_url) f.push({ kind: "problem", text: "No source" });
+  if (x.layover_min && x.layover_min >= 240) f.push({ kind: "tradeoff", text: `${minutes(x.layover_min)} layover${x.via ? ` in ${x.via}` : ""}` });
+  if (x.depart && x.depart < "07:00") f.push({ kind: "tradeoff", text: `Early start, ${ampm(x.depart)}` });
+  if (x.duration_min && x.duration_min >= 600) f.push({ kind: "tradeoff", text: `${minutes(x.duration_min)} on the road` });
+  if (x.commute_min && x.commute_min >= 35) f.push({ kind: "tradeoff", text: `${x.commute_min} min from the sights` });
+  if (o.refundable === false) f.push({ kind: "tradeoff", text: "Non-refundable" });
+  if (x.window_seat === false) f.push({ kind: "tradeoff", text: "No window" });
   if (o.history.length > 1) {
-    const first = o.history[0];
-    const d = o.price_cad - first.price_cad;
-    if (d !== 0) f.push({ level: d > 0 ? "warn" : "info", text: `${money(d, { sign: true })} since ${clock(first.at)}` });
+    const d = o.price_cad - o.history[0].price_cad;
+    if (d !== 0) f.push({ kind: "tradeoff", text: `${d > 0 ? "Up" : "Down"} ${money(Math.abs(d))} since ${clock(o.history[0].at)}` });
   }
-  if (o.audit?.status === "conflict") f.push({ level: "bad", text: "Auditor disagrees" });
-  if (o.audit?.status === "unsourced") f.push({ level: "bad", text: "Couldn't verify" });
   return f;
 }
 
@@ -154,23 +153,14 @@ export function derive(run: Run, log: LogEvent[], audit: Audit): Brief {
   const mistakes = events.filter((e) => e.kind === "mistake");
   const lapsed = events.filter((e) => e.lost_savings_cad);
 
-  const checkFirst: Brief["checkFirst"] = [];
-  if (reserved > preauth) {
-    const breach = actions.find((a) => !a.rule.withinPreauth);
-    checkFirst.push({
-      level: "bad",
-      text: `Muse reserved ${money(reserved)} overnight, ${money(reserved - preauth)} past your ${money(preauth)} limit`,
-      event_id: breach?.corrections[0]?.id ?? breach?.event.id ?? "",
-    });
+  const linked = new Set(events.map((e) => e.corrects).filter(Boolean));
+  const threadNotes: Record<string, LogEvent[]> = {};
+  for (const e of [...mistakes.filter((m) => !m.corrects), ...lapsed]) {
+    if (linked.has(e.id)) continue;
+    (threadNotes[e.thread ?? "other"] ??= []).push(e);
   }
-  for (const c of audit.claims) {
-    if (c.status === "conflict" || c.status === "unsourced")
-      checkFirst.push({ level: "bad", text: `${c.claim}: ${c.note}`, event_id: c.event_id });
-  }
-  for (const m of mistakes) {
-    if (!checkFirst.some((c) => c.event_id === m.id)) checkFirst.push({ level: "warn", text: m.title, event_id: m.id });
-  }
-  for (const l of lapsed) checkFirst.push({ level: "info", text: `${l.title} (cost of waiting ${money(l.lost_savings_cad!)})`, event_id: l.id });
+  const problemCount =
+    audit.claims.filter((c) => c.status === "conflict" || c.status === "unsourced").length + mistakes.length + (reserved > preauth ? 1 : 0);
 
   return {
     run,
@@ -179,11 +169,12 @@ export function derive(run: Run, log: LogEvent[], audit: Audit): Brief {
     assumptions: events.filter((e) => e.kind === "assumption"),
     mistakes,
     lapsed,
-    updates: events.filter((e) => e.kind === "update" && !e.lost_savings_cad),
+    updates: events.filter((e) => e.kind === "update" && !e.lost_savings_cad && !e.updates),
     searches: events.filter((e) => e.kind === "search"),
     timeline: events,
     audit,
     spend: { budget: run.budget_cad, preauth, reserved, held, pending, preauthBreached: reserved > preauth },
-    checkFirst,
+    threadNotes,
+    problemCount,
   };
 }

@@ -2,36 +2,94 @@
 
 import { useEffect, useState } from "react";
 import type { Brief, DecisionView, OptionView } from "@/lib/derive";
-import { clock, minutes, money, until } from "@/lib/format";
+import { clock, money, until } from "@/lib/format";
 import { useLive } from "@/lib/live";
 import { useStore, type Replan } from "@/lib/store";
+import type { LogEvent } from "@/lib/types";
 import type { ReplanOption } from "@/app/api/replan/route";
-import { AuditTag, Btn, FlagTag, Tag } from "./ui";
+import { Btn, FlagTag, Route, Tag } from "./ui";
 import { Recheck } from "./Recheck";
 
-const THREAD_LABEL: Record<string, string> = {
-  "nyc-stay": "New York bed · Oct 10–14",
-  return: "Return · Sun Oct 18",
+export const LEG_LABEL: Record<string, string> = {
   out: "Outbound · Sat Oct 10",
-  "nyc-bos": "New York → Boston · Oct 14",
-  "bos-stay": "Boston bed · Oct 14–18",
+  "nyc-stay": "New York stay · Oct 10–14",
+  "nyc-bos": "To Boston · Wed Oct 14",
+  "bos-stay": "Boston stay · Oct 14–18",
+  return: "Return · Sun Oct 18",
 };
-
-function factsLine(o: OptionView) {
-  const x = o.facts ?? {};
-  const bits: string[] = [];
-  if (x.layover_min) bits.push(`${minutes(x.layover_min)} layover`);
-  if (x.duration_min && !x.layover_min) bits.push(minutes(x.duration_min));
-  if (x.nights) bits.push(`${x.nights} nights`);
-  if (x.commute_min) bits.push(`${x.commute_min} min to sights`);
-  if (o.note) bits.push(o.note);
-  return bits.join(" · ");
-}
 
 const REDIRECT_CHIPS: Record<string, string[]> = {
-  return: ["Direct only — I'll go a little over budget", "Anything that gets me home by 3 PM", "Find me something cheaper, any mode"],
-  "nyc-stay": ["Private room, central, under $500", "Cheapest thing that's under 20 min from Midtown", "Somewhere in Brooklyn"],
+  return: ["Direct only, I'll go a little over", "Home by 3 PM", "Cheaper, any way home"],
+  "nyc-stay": ["Private room, central, under $500", "Under 20 min from Midtown", "Somewhere in Brooklyn"],
 };
+
+export const headline = (e: LogEvent) => e.headline ?? e.title;
+
+export function Why({ e }: { e: LogEvent }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-3">
+      <button type="button" onClick={() => setOpen(!open)} className="text-[13px] text-muted underline decoration-rule underline-offset-4 hover:text-ink">
+        {open ? "Hide" : "Why"}
+      </button>
+      {open && (
+        <div className="mt-3 border-l border-rule-strong pl-4 text-[14px] leading-relaxed text-ink-2">
+          <p>{e.detail}</p>
+          <p className="mt-1.5 text-[12.5px] text-muted">Muse, {clock(e.ts)}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Mistakes and lapsed fares that belong to this leg, one line each.
+export function NoteLines({ notes, onAudit }: { notes: LogEvent[]; onAudit: (id: string) => void }) {
+  if (!notes.length) return null;
+  return (
+    <div className="mt-4 space-y-1.5">
+      {notes.map((n) => (
+        <button key={n.id} type="button" onClick={() => onAudit(n.id)} className="flex items-baseline gap-2.5 text-left text-[13.5px] hover:underline">
+          <span aria-hidden className={`inline-block size-1.5 shrink-0 -translate-y-0.5 ${n.kind === "mistake" ? "bg-bad" : "bg-warn"}`} />
+          <span className={n.kind === "mistake" ? "text-bad" : "text-ink-2"}>
+            {n.kind === "mistake" ? "Fixed overnight: " : ""}
+            {headline(n)}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function OptionBody({ o, onAudit, status }: { o: OptionView; onAudit?: () => void; status?: React.ReactNode }) {
+  const x = o.facts ?? {};
+  return (
+    <>
+      <div className="text-[16px] font-medium leading-snug">{o.label.replace(/\s*\((?:with taxes|expired)\)$/i, "")}</div>
+      {o.sub && <div className="mt-0.5 text-[14px] text-muted">{o.sub}</div>}
+      {(x.from || x.depart) && (
+        <div className="mt-3">
+          <Route from={x.from} to={x.to} depart={x.depart} arrive={x.arrive} />
+        </div>
+      )}
+      {!x.from && x.nights && (
+        <div className="mt-0.5 text-[14px] text-muted">
+          {x.nights} nights{x.commute_min && x.commute_min < 35 ? ` · ${x.commute_min} min to the sights` : ""}
+        </div>
+      )}
+      {(o.flags.length > 0 || status) && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {status}
+          {o.flags.map((f) => (
+            <FlagTag key={f.text} f={f} onClick={f.kind === "problem" ? onAudit : undefined} />
+          ))}
+        </div>
+      )}
+      {o.audit && (o.audit.status === "conflict" || o.audit.status === "unsourced") && (
+        <p className="mt-2 text-[13.5px] leading-snug text-bad">{o.audit.note}</p>
+      )}
+    </>
+  );
+}
 
 export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Brief; onAudit: (id: string) => void }) {
   const { s, dispatch, now, queue } = useStore();
@@ -43,12 +101,14 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
   const [text, setText] = useState("");
   const recPrice = d.options.find((o) => o.label === d.recommended)?.price_cad ?? 0;
   const thread = d.event.thread ?? "";
+  const leg = LEG_LABEL[thread] ?? "Decision";
+  const notes = brief.threadNotes[thread] ?? [];
 
   const choose = (label: string | null, price: number | null, line: string) => {
     dispatch({ t: "decision", id: d.event.id, s: { status: "sending", choice: label, price, at: Date.now() } });
     queue(`decision:${d.event.id}`, line);
-    // Optimistic: it's in the reply immediately; the short "sending" beat is
-    // just the UI acknowledging the tap before it collapses.
+    // Optimistic: it's in the reply immediately; the short beat just
+    // acknowledges the tap before the card collapses.
     setTimeout(() => dispatch({ t: "decision", id: d.event.id, s: { status: "queued", choice: label, price, at: Date.now() } }), 700);
   };
 
@@ -73,7 +133,7 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
             title: d.event.title,
             detail: d.event.detail,
             recommended: d.recommended,
-            options: d.options.map((o) => ({ label: o.label, price_cad: o.price_cad, refundable: o.refundable, held: o.held, facts: o.facts, note: o.note })),
+            options: d.options.map((o) => ({ label: o.label, price_cad: o.price_cad, refundable: o.refundable, held: o.held, facts: o.facts, note: o.sub ?? o.note })),
           },
           budget: { total: live.budget, committedElsewhere },
           trip: `${brief.run.task} Traveller is a university student from Waterloo, Ontario. Current plan: ${brief.actions.map((a) => a.option.label).join("; ")}.`,
@@ -89,25 +149,15 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
 
   if (st.status !== "open") {
     return (
-      <div className="border border-rule bg-card px-4 py-3">
-        <div className="eyebrow">{THREAD_LABEL[thread] ?? "Decision"}</div>
-        <div className="mt-1 flex items-start justify-between gap-3">
-          <div className="text-[15px] font-medium">
-            {st.choice ? (
-              <>
-                <span className="text-ok">✓</span> {st.choice}
-              </>
-            ) : (
-              <>
-                <span className="text-bad">✕</span> None of these
-              </>
-            )}
-          </div>
-          {st.price !== null && <div className="num text-[15px] font-medium">{money(st.price)}</div>}
+      <div className="border border-rule bg-card p-5 sm:px-7">
+        <div className="eyebrow">{leg}</div>
+        <div className="mt-2 flex items-baseline justify-between gap-4">
+          <div className="text-[16px] font-medium">{st.choice ?? "None of these"}</div>
+          {st.price !== null && st.price > 0 && <div className="num text-[16px] font-medium">{money(st.price)}</div>}
         </div>
-        <div className="mt-1.5 flex items-center justify-between text-[12px] text-muted">
-          <span>{st.status === "sending" ? <span className="working">Adding to your reply…</span> : "In your reply to Muse · not sent yet"}</span>
-          <button type="button" onClick={reopen} className="underline underline-offset-2 hover:text-ink">
+        <div className="mt-2 flex items-center justify-between text-[13px] text-muted">
+          <span>{st.status === "sending" ? <span className="working">Adding to your reply…</span> : "In your reply to Muse"}</span>
+          <button type="button" onClick={reopen} className="underline decoration-rule underline-offset-4 hover:text-ink">
             Change
           </button>
         </div>
@@ -115,39 +165,30 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
     );
   }
 
-  const suggestions = REDIRECT_CHIPS[thread] ?? ["Find something cheaper", "Prioritize comfort over price"];
-
   return (
     <article className="border border-rule-strong bg-card">
-      <header className="flex items-center justify-between border-b border-rule px-4 py-2">
-        <span className="eyebrow !text-act">{THREAD_LABEL[thread] ?? "Decision"}</span>
-        {d.expires_at && (
-          <span className="num text-[12px] text-act">Hold ends in {until(d.expires_at, now)}</span>
-        )}
-      </header>
-
-      <div className="px-4 pt-3">
-        <h3 className="text-[19px] font-semibold leading-snug tracking-[-0.01em]">{d.event.title}</h3>
-        <p className="mt-1.5 text-[14px] leading-relaxed text-ink-2">{d.event.detail}</p>
-        <p className="mt-1 text-[12px] text-muted">
-          Muse, {clock(d.event.ts)}
-          {d.related.length > 0 && ` · updated ${clock(d.related[d.related.length - 1].ts)}`}
-        </p>
+      <div className="p-5 sm:p-7">
+        <div className="flex items-baseline justify-between gap-4">
+          <span className="eyebrow !text-act">{leg}</span>
+          {d.expires_at && <span className="num text-[13px] text-act">Hold ends in {until(d.expires_at, now)}</span>}
+        </div>
+        <h3 className="mt-3 text-[22px] font-semibold leading-tight tracking-[-0.015em] sm:text-[24px]">{headline(d.event)}</h3>
+        {d.event.summary && <p className="mt-2 text-[15.5px] leading-relaxed text-ink-2">{d.event.summary}</p>}
+        <NoteLines notes={notes} onAudit={onAudit} />
+        <Why e={d.event} />
       </div>
 
-      <fieldset className="mt-3">
+      <fieldset>
         <legend className="sr-only">Options</legend>
         {d.options.map((o) => {
           const delta = o.price_cad - recPrice;
           const total = live.totalIf(d.event.id, o.price_cad);
           const over = total - live.budget;
           const picked = sel === o.label;
+          const isPick = o.label === d.recommended;
           return (
-            <label
-              key={o.label}
-              className={`block cursor-pointer border-t border-rule px-4 py-3 ${picked ? "bg-paper" : ""}`}
-            >
-              <div className="flex items-start gap-3">
+            <label key={o.label} className={`block cursor-pointer border-t border-rule px-5 py-5 sm:px-7 ${picked ? "bg-paper" : ""}`}>
+              <div className="flex items-start gap-4">
                 <input
                   type="radio"
                   name={d.event.id}
@@ -156,36 +197,30 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
                   className="mt-1 size-4 shrink-0 accent-[var(--ink)]"
                 />
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-[15px] font-medium leading-snug">{o.label}</div>
-                      {factsLine(o) && <div className="mt-0.5 text-[12.5px] text-muted">{factsLine(o)}</div>}
+                  <OptionBody
+                    o={o}
+                    onAudit={() => onAudit(d.event.id)}
+                    status={
+                      (isPick || o.held) && (
+                        <>
+                          {isPick && <Tag tone="pick">Muse&apos;s pick</Tag>}
+                          {o.held && <Tag>On hold</Tag>}
+                        </>
+                      )
+                    }
+                  />
+                  {picked && (
+                    <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-muted">
+                      <span className={over > 0 ? "text-bad" : ""}>
+                        {over > 0 ? `${money(over)} over budget` : `${money(-over)} left in budget`}
+                      </span>
+                      {o.checked_at && <Recheck o={o} when={leg} checkedAt={o.checked_at} />}
                     </div>
-                    <div className="num shrink-0 text-right">
-                      <div className="text-[15px] font-semibold">{money(o.price_cad)}</div>
-                      {o.label !== d.recommended && (
-                        <div className={`mt-0.5 text-[12.5px] ${delta > 0 ? "text-ink-2" : "text-ok"}`}>{money(delta, { sign: true })}</div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-1">
-                    {o.label === d.recommended && <Tag tone="ink">Muse&apos;s pick</Tag>}
-                    {o.held && <Tag tone="ok">On hold</Tag>}
-                    {o.audit && <AuditTag status={o.audit.status} onClick={() => onAudit(d.event.id)} />}
-                    {o.flags.filter((f) => !f.text.startsWith("Auditor") && !f.text.startsWith("Couldn")).map((f) => (
-                      <FlagTag key={f.text} f={f} />
-                    ))}
-                  </div>
-                  {o.audit && o.audit.status !== "verified" && (
-                    <p className="mt-1.5 text-[12.5px] leading-snug text-bad">{o.audit.note}</p>
                   )}
-                  <div className="mt-1.5 flex flex-wrap items-center gap-x-3 text-[12px] text-muted">
-                    <span className={over > 0 ? "text-bad" : ""}>
-                      Trip total <span className="num">{money(total)}</span>
-                      {over > 0 ? ` · ${money(over)} over` : ` · ${money(-over)} left`}
-                    </span>
-                    {o.checked_at && <Recheck o={o} when={THREAD_LABEL[thread] ?? ""} checkedAt={o.checked_at} />}
-                  </div>
+                </div>
+                <div className="num shrink-0 text-right">
+                  <div className="text-[17px] font-semibold">{money(o.price_cad)}</div>
+                  {!isPick && <div className={`mt-0.5 text-[13px] ${delta > 0 ? "text-muted" : "text-ok"}`}>{money(delta, { sign: true })}</div>}
                 </div>
               </div>
             </label>
@@ -193,12 +228,18 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
         })}
       </fieldset>
 
-      {replan && <ReplanPanel r={replan} onPick={(o, instr) => choose(o.label, o.price_cad, instr)} onDismiss={() => dispatch({ t: "replan", id: d.event.id, r: null })} />}
+      {replan && (
+        <ReplanPanel
+          r={replan}
+          onPick={(o, instr) => choose(o.label, o.price_cad, instr)}
+          onDismiss={() => dispatch({ t: "replan", id: d.event.id, r: null })}
+        />
+      )}
 
-      {redirecting && (
-        <div className="border-t border-rule px-4 py-3">
-          <label htmlFor={`r-${d.event.id}`} className="text-[13px] font-medium">
-            Tell Muse what you want instead
+      {redirecting ? (
+        <div className="border-t border-rule p-5 sm:p-7">
+          <label htmlFor={`r-${d.event.id}`} className="text-[14px] font-medium">
+            What do you want instead?
           </label>
           <textarea
             id={`r-${d.event.id}`}
@@ -206,17 +247,16 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
             onChange={(e) => setText(e.target.value)}
             rows={2}
             autoFocus
-            className="mt-1.5 w-full resize-none border border-rule bg-paper px-3 py-2 text-[15px] outline-none focus:border-ink"
-            placeholder="e.g. direct only, I'll go a bit over"
+            className="mt-3 w-full resize-none border border-rule bg-paper px-3.5 py-3 text-[15.5px] outline-none focus:border-ink"
           />
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {suggestions.map((c) => (
-              <button key={c} type="button" onClick={() => setText(c)} className="border border-rule px-2 py-1 text-[12.5px] text-ink-2 hover:border-ink">
+          <div className="mt-3 flex flex-wrap gap-2">
+            {(REDIRECT_CHIPS[thread] ?? ["Cheaper", "More comfortable"]).map((c) => (
+              <button key={c} type="button" onClick={() => setText(c)} className="border border-rule px-2.5 py-1.5 text-[13px] text-ink-2 hover:border-ink">
                 {c}
               </button>
             ))}
           </div>
-          <div className="mt-3 flex gap-2">
+          <div className="mt-5 flex gap-3">
             <Btn kind="primary" onClick={() => sendRedirect(text)} disabled={!text.trim()}>
               Re-plan
             </Btn>
@@ -225,27 +265,21 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
             </Btn>
           </div>
         </div>
-      )}
-
-      {!redirecting && (
-        <footer className="flex flex-wrap items-center gap-2 border-t border-rule px-4 py-3">
+      ) : (
+        <footer className="flex flex-wrap items-center gap-3 border-t border-rule p-5 sm:px-7">
           <Btn
             kind="act"
             onClick={() => {
               const o = d.options.find((x) => x.label === sel)!;
-              choose(o.label, o.price_cad, `${THREAD_LABEL[thread] ?? d.event.title}: go with ${o.label} (${money(o.price_cad)}).${o.held ? " Use the hold." : ""}`);
+              choose(o.label, o.price_cad, `${leg}: go with ${o.label} (${money(o.price_cad)}).${o.held ? " Use the hold." : ""}`);
             }}
           >
-            Book {sel === d.recommended ? "Muse's pick" : "this one"}
+            {sel === d.recommended ? "Book Muse's pick" : "Book this one"}
           </Btn>
           <Btn kind="secondary" onClick={() => setRedirecting(true)} disabled={replan?.status === "thinking"}>
             Redirect
           </Btn>
-          <Btn
-            kind="ghost"
-            className="ml-auto"
-            onClick={() => choose(null, 0, `${THREAD_LABEL[thread] ?? d.event.title}: none of these. Release any hold and don't book yet.`)}
-          >
+          <Btn kind="ghost" className="ml-auto" onClick={() => choose(null, 0, `${leg}: none of these. Release any hold and don't book yet.`)}>
             None of these
           </Btn>
         </footer>
@@ -257,8 +291,8 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
 const STAGES = [
   [0, "Reading Muse's options"],
   [2500, "Searching live fares"],
-  [7000, "Checking against your budget"],
-  [14000, "Still going. Free-tier search is slow; you can keep working, this card will update"],
+  [7000, "Checking your budget"],
+  [14000, "Still searching. You can keep going, this card will update"],
 ] as const;
 
 function ReplanPanel({
@@ -281,12 +315,12 @@ function ReplanPanel({
   if (r.status === "thinking") {
     const stage = [...STAGES].reverse().find(([t]) => el >= t)![1];
     return (
-      <div className="border-t border-rule bg-paper px-4 py-3">
-        <div className="text-[12px] text-muted">You said: &ldquo;{r.text}&rdquo;</div>
-        <div className="mt-2 flex items-center gap-2 text-[14px]">
+      <div className="border-t border-rule bg-paper p-5 sm:px-7">
+        <div className="text-[13px] text-muted">&ldquo;{r.text}&rdquo;</div>
+        <div className="mt-3 flex items-center gap-3 text-[15px]">
           <span className="working inline-block size-2 bg-act" aria-hidden />
           <span>{stage}…</span>
-          <span className="num ml-auto text-[12px] text-muted">{Math.floor(el / 1000)}s</span>
+          <span className="num ml-auto text-[13px] text-muted">{Math.floor(el / 1000)}s</span>
         </div>
       </div>
     );
@@ -294,8 +328,8 @@ function ReplanPanel({
 
   if (r.status === "error") {
     return (
-      <div className="border-t border-rule bg-bad-bg px-4 py-3 text-[13px] text-bad">
-        Couldn&apos;t re-plan (&ldquo;{r.error}&rdquo;). Muse&apos;s original options above still stand.{" "}
+      <div className="border-t border-rule bg-bad-bg p-5 text-[14px] text-bad sm:px-7">
+        Couldn&apos;t re-plan. Muse&apos;s options above still stand.{" "}
         <button type="button" className="underline" onClick={onDismiss}>
           Dismiss
         </button>
@@ -305,39 +339,42 @@ function ReplanPanel({
 
   const res = r.result;
   return (
-    <div className="border-t-2 border-ink bg-paper px-4 py-3">
-      <div className="flex items-baseline justify-between">
-        <span className="eyebrow">Re-plan · &ldquo;{r.text}&rdquo;</span>
-        <button type="button" onClick={onDismiss} className="text-[12px] text-muted underline underline-offset-2">
+    <div className="border-t-2 border-ink bg-paper p-5 sm:p-7">
+      <div className="flex items-baseline justify-between gap-4">
+        <span className="text-[13px] text-muted">&ldquo;{r.text}&rdquo;</span>
+        <button type="button" onClick={onDismiss} className="text-[13px] text-muted underline decoration-rule underline-offset-4">
           Discard
         </button>
       </div>
-      <p className="mt-1.5 text-[14px] leading-relaxed">{res.summary}</p>
-      {res.tradeoff && <p className="mt-1 text-[13px] text-ink-2">Trade-off: {res.tradeoff}</p>}
-      <ul className="mt-2">
+      <p className="mt-3 text-[16px] font-medium leading-snug">{res.summary}</p>
+      {res.tradeoff && <p className="mt-1.5 text-[14px] text-ink-2">{res.tradeoff}</p>}
+      <ul className="mt-4">
         {res.options.map((o) => (
-          <li key={o.label} className="flex items-start justify-between gap-3 border-t border-rule py-2.5">
+          <li key={o.label} className="flex items-start justify-between gap-4 border-t border-rule py-4">
             <div className="min-w-0">
-              <div className="text-[14.5px] font-medium leading-snug">
-                {o.label}
-                {o.label === res.recommended && <span className="ml-1.5 align-middle"><Tag tone="ink">Best fit</Tag></span>}
-              </div>
-              <div className="mt-0.5 text-[12.5px] text-muted">{o.why}</div>
-              <div className="mt-1 flex flex-wrap gap-1">
-                {o.new ? <Tag tone="warn">New · Muse hasn&apos;t confirmed</Tag> : <Tag>From Muse&apos;s list</Tag>}
+              <div className="text-[15.5px] font-medium leading-snug">{o.label.replace(/\s*(→|->)\s*/g, " to ")}</div>
+              <div className="mt-0.5 text-[13.5px] text-muted">{o.why}</div>
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                {o.label === res.recommended && <Tag tone="pick">Best fit</Tag>}
+                {o.new && <Tag tone="tradeoff">New, not confirmed by Muse</Tag>}
                 {o.source_url && (
-                  <a href={o.source_url} target="_blank" rel="noreferrer" className="text-[11px] text-muted underline underline-offset-2">
-                    source
+                  <a href={o.source_url} target="_blank" rel="noreferrer" className="text-[12px] text-muted underline underline-offset-2">
+                    Source
                   </a>
                 )}
               </div>
             </div>
-            <div className="flex shrink-0 flex-col items-end gap-1.5">
-              <span className="num text-[15px] font-semibold">{o.price_cad != null ? money(o.price_cad) : "—"}</span>
+            <div className="flex shrink-0 flex-col items-end gap-2">
+              <span className="num text-[16px] font-semibold">{o.price_cad != null ? money(o.price_cad) : "–"}</span>
               <Btn
                 kind="secondary"
-                className="!px-2.5 !py-1 !text-[12.5px]"
-                onClick={() => onPick({ ...o, price_cad: o.price_cad ?? 0 }, `${res.instruction_for_agent} (I picked: ${o.label}${o.price_cad != null ? `, ~${money(o.price_cad)}` : ""}. Confirm the real price before booking.)`)}
+                className="!px-3 !py-1.5 !text-[13px]"
+                onClick={() =>
+                  onPick(
+                    { ...o, price_cad: o.price_cad ?? 0 },
+                    `${res.instruction_for_agent} (I picked: ${o.label}${o.price_cad != null ? `, about ${money(o.price_cad)}` : ""}. Confirm the real price before booking.)`,
+                  )
+                }
               >
                 Pick
               </Btn>
@@ -345,8 +382,8 @@ function ReplanPanel({
           </li>
         ))}
       </ul>
-      <p className="mt-1 text-[11.5px] text-muted">
-        {res.model} with live search · {(r.ms / 1000).toFixed(1)}s. New options are a lead, not a booking: Muse re-prices them before anything is held.
+      <p className="mt-2 text-[12px] text-muted">
+        Live search, {(r.ms / 1000).toFixed(0)}s. Muse re-prices new options before anything is held.
       </p>
     </div>
   );

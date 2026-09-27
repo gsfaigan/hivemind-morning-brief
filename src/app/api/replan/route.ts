@@ -55,7 +55,7 @@ Do this:
 3. Give at most 4 options, best first.
 
 Reply with ONLY this JSON:
-{"summary":"1-2 short sentences to the user, second person, plain (e.g. \"Two directs fit. Porter is cheapest and gets you home by 3.\")","options":[{"label":"carrier/place · time","price_cad":123,"why":"one short clause","source_url":"https://... or null","new":true}],"recommended":"label of best option or null","tradeoff":"what the user gives up, under 15 words","instruction_for_agent":"a short direct message to send Muse so it can execute this"}`;
+{"summary":"1-2 short sentences to the user, second person, plain (e.g. \"Two directs fit. Porter is cheapest and gets you home by 3.\")","options":[{"label":"carrier or place, short, e.g. \"Porter, direct 1:15 PM\" (never use arrows)","price_cad":123,"why":"one short clause","source_url":"https://... or null","new":true}],"recommended":"label of best option or null","tradeoff":"what the user gives up, under 15 words","instruction_for_agent":"a short direct message to send Muse so it can execute this"}`;
 
   try {
     const r = await ask(prompt, { search: true });

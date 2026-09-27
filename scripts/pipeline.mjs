@@ -67,7 +67,7 @@ const write = (name, data) => {
 const read = (name) => JSON.parse(fs.readFileSync(path.join(LIVE, name), "utf8"));
 
 const SCHEMA = `Each event:
-{"id":"e01","ts":"ISO 8601 with -04:00","kind":"update|decision|would_book|assumption|mistake|search","thread":"plan|budget|out|nyc-stay|nyc-bos|bos-stay|return|seats|other","title":"...","detail":"...","options":[{"label":"carrier/place · time/route","price":123,"currency":"CAD|USD","refundable":true|false|null,"cancel_by":"ISO or null","source_url":"url or null","checked_at":"ISO or null","held":true|false,"note":"optional","facts":{"depart":"HH:MM 24h","arrive":"HH:MM","layover_min":0,"duration_min":0,"commute_min":0,"nights":0,"window_seat":true|false|null}}],"recommended":"exact label of one option or null","expires_at":"ISO or null","reversible":true|false,"confidence":"high|med|low","alternatives":["other readings, for assumptions only"],"lost_savings_cad":0,"corrects":"id of earlier event this fixes, or omit","updates":"id of the open decision this adds options to or refreshes, or omit","agent":"muse"}
+{"id":"e01","ts":"ISO 8601 with -04:00","kind":"update|decision|would_book|assumption|mistake|search","thread":"plan|budget|out|nyc-stay|nyc-bos|bos-stay|return|seats|other","title":"Muse's own title","headline":"under 50 chars, the point in plain words, e.g. \"A 6-hour layover, or $200 more to fly direct\"","summary":"one short sentence, under 110 chars, or omit","detail":"Muse's full note, verbatim","options":[{"label":"carrier or place only, short, e.g. \"Porter PD 2113\", \"HI Boston\", \"American, via Philadelphia\"","sub":"room type · neighbourhood, or omit","price":123,"currency":"CAD|USD","refundable":true|false|null,"cancel_by":"ISO or null","source_url":"url or null","checked_at":"ISO or null","held":true|false,"note":"optional","facts":{"from":"departure place, e.g. Billy Bishop","to":"arrival place","via":"connection city or omit","depart":"HH:MM 24h","arrive":"HH:MM","layover_min":0,"duration_min":0,"commute_min":0,"nights":0,"window_seat":true|false|null}}],"recommended":"exact label of one option or null","expires_at":"ISO or null","reversible":true|false,"confidence":"high|med|low","alternatives":["other readings, for assumptions only"],"lost_savings_cad":0,"corrects":"id of earlier event this fixes, or omit","updates":"id of the open decision this adds options to or refreshes, or omit","agent":"muse"}
 
 threads: out = Toronto→New York travel; nyc-stay = New York lodging; nyc-bos = New York→Boston travel; bos-stay = Boston lodging; return = Boston→Toronto travel; seats = seat selection; budget/plan = overall; other = anything else.`;
 
@@ -79,6 +79,8 @@ async function ingest(file) {
 ${SCHEMA}
 
 Rules:
+- Never use arrow characters (→, ->) anywhere. Write "to".
+- headline and summary are short and plain: no hedging, no filler. They're what the user reads first.
 - Keep Muse's own wording for title and detail. You may shorten a title to under 80 characters, but don't editorialize. Detail stays in Muse's first-person voice.
 - NEVER invent a price, time, URL or fact. If the log doesn't state it, use null or leave it out.
 - If Muse later fixed an earlier entry (a wrong price, a wrong airport), mark the fix as kind "mistake" with "corrects" set to the earlier id, and repeat the corrected option.

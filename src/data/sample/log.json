@@ -11,7 +11,9 @@
       "USD, transport + beds",
       "CAD, everything incl. food"
     ],
-    "confidence": "med"
+    "confidence": "med",
+    "headline": "The $1,500 is CAD and covers travel and beds",
+    "summary": "Food and local transit aren't counted. Plan on about $45 a day for those."
   },
   {
     "id": "e02",
@@ -25,7 +27,9 @@
       "5 NYC / 3 Boston",
       "3 NYC / 5 Boston"
     ],
-    "confidence": "low"
+    "confidence": "low",
+    "headline": "Four nights in New York, four in Boston",
+    "summary": "An even split until you tell me which city matters more."
   },
   {
     "id": "e03",
@@ -34,11 +38,13 @@
     "thread": "out",
     "agent": "muse",
     "title": "Skipping Buffalo — it doesn't actually save money",
-    "detail": "BUF→NYC fares were $40–60 cheaper, but the 2h drive plus ~$60 parking (from your profile) wipes that out.",
+    "detail": "BUFtoNYC fares were $40–60 cheaper, but the 2h drive plus ~$60 parking (from your profile) wipes that out.",
     "alternatives": [
       "Include Buffalo anyway"
     ],
-    "confidence": "high"
+    "confidence": "high",
+    "headline": "Buffalo isn't worth the drive",
+    "summary": "Cheaper fares, but the drive and parking cancel it out."
   },
   {
     "id": "e04",
@@ -46,8 +52,9 @@
     "kind": "search",
     "thread": "out",
     "agent": "muse",
-    "title": "Compared 23 Toronto → New York fares for Sat Oct 10",
-    "detail": "YYZ and YTZ to LGA, JFK and EWR. Cheapest by far are before 8 AM."
+    "title": "Compared 23 Toronto to New York fares for Sat Oct 10",
+    "detail": "YYZ and YTZ to LGA, JFK and EWR. Cheapest by far are before 8 AM.",
+    "headline": "Compared 23 fares to New York"
   },
   {
     "id": "e05",
@@ -57,7 +64,9 @@
     "agent": "muse",
     "title": "I logged the Porter fare as leaving from Pearson — it's Billy Bishop",
     "detail": "Caught it on a re-check. Porter flies out of YTZ, downtown. That's actually closer to you from Union. Price didn't change.",
-    "confidence": "high"
+    "confidence": "high",
+    "headline": "Logged the Porter flight at the wrong airport",
+    "summary": "It leaves from Billy Bishop, not Pearson. Same price."
   },
   {
     "id": "e06",
@@ -65,11 +74,11 @@
     "kind": "would_book",
     "thread": "out",
     "agent": "muse",
-    "title": "Reserved Porter 6:50 AM, Billy Bishop → Newark, window 14A",
+    "title": "Reserved Porter 6:50 AM, Billy Bishop to Newark, window 14A",
     "detail": "You said any time is fine if it's cheaper. The 12:10 PM Air Canada is +$140 — I didn't think a later wake-up was worth that. Free cancel for 24h.",
     "options": [
       {
-        "label": "Porter PD 2113 · 6:50 AM YTZ → EWR",
+        "label": "Porter PD 2113",
         "price": 214,
         "currency": "CAD",
         "refundable": true,
@@ -79,11 +88,13 @@
         "facts": {
           "depart": "06:50",
           "arrive": "08:22",
-          "window_seat": true
+          "window_seat": true,
+          "from": "Billy Bishop",
+          "to": "Newark"
         }
       },
       {
-        "label": "Air Canada AC 716 · 12:10 PM YYZ → LGA",
+        "label": "Air Canada AC 716",
         "price": 354,
         "currency": "CAD",
         "refundable": true,
@@ -92,13 +103,17 @@
         "facts": {
           "depart": "12:10",
           "arrive": "13:41",
-          "window_seat": true
+          "window_seat": true,
+          "from": "Pearson",
+          "to": "LaGuardia"
         }
       }
     ],
-    "recommended": "Porter PD 2113 · 6:50 AM YTZ → EWR",
+    "recommended": "Porter PD 2113",
     "reversible": true,
-    "confidence": "high"
+    "confidence": "high",
+    "headline": "Porter to Newark, Saturday 6:50 AM",
+    "summary": "The noon flight was $140 more. I didn't think sleeping in was worth that."
   },
   {
     "id": "e07",
@@ -107,7 +122,8 @@
     "thread": "nyc-stay",
     "agent": "muse",
     "title": "Compared 31 places to sleep in New York, Oct 10–14",
-    "detail": "Hotels, hostels and pods within an hour of Midtown."
+    "detail": "Hotels, hostels and pods within an hour of Midtown.",
+    "headline": "Compared 31 places to stay in New York"
   },
   {
     "id": "e08",
@@ -119,7 +135,7 @@
     "detail": "The Newark hotel is $52 cheaper on paper, but after NJ Transit fares it's about $13 more than the hostel and costs ~5 hours of the trip on trains. Dorm vs. private room is your call.",
     "options": [
       {
-        "label": "HI New York City Hostel · 6-bed dorm, Upper West Side",
+        "label": "HI New York City",
         "price": 348,
         "currency": "CAD",
         "refundable": true,
@@ -129,10 +145,11 @@
         "facts": {
           "nights": 4,
           "commute_min": 20
-        }
+        },
+        "sub": "6-bed dorm · Upper West Side"
       },
       {
-        "label": "Holiday Inn Express Newark Airport · private room",
+        "label": "Holiday Inn Express Newark",
         "price": 296,
         "currency": "CAD",
         "refundable": true,
@@ -143,10 +160,11 @@
         "facts": {
           "nights": 4,
           "commute_min": 42
-        }
+        },
+        "sub": "Private room · by the airport"
       },
       {
-        "label": "Pod 51 · private pod, Midtown East",
+        "label": "Pod 51",
         "price": 798,
         "currency": "CAD",
         "refundable": true,
@@ -155,12 +173,15 @@
         "facts": {
           "nights": 4,
           "commute_min": 5
-        }
+        },
+        "sub": "Private pod · Midtown East"
       }
     ],
-    "recommended": "HI New York City Hostel · 6-bed dorm, Upper West Side",
+    "recommended": "HI New York City",
     "reversible": true,
-    "confidence": "med"
+    "confidence": "med",
+    "headline": "A dorm uptown, or a room 42 minutes out",
+    "summary": "Newark looks cheaper, but costs more once you add the train."
   },
   {
     "id": "e09",
@@ -169,7 +190,9 @@
     "thread": "seats",
     "agent": "muse",
     "title": "Amtrak doesn't assign seats on the Northeast Regional",
-    "detail": "Can't guarantee a window NYC → Boston. Board early at Moynihan and sit on the right side for the water views after New Haven."
+    "detail": "Can't guarantee a window NYC to Boston. Board early at Moynihan and sit on the right side for the water views after New Haven.",
+    "headline": "No assigned seats on the Amtrak",
+    "summary": "Board early and sit on the right for the water views."
   },
   {
     "id": "e10",
@@ -177,11 +200,11 @@
     "kind": "would_book",
     "thread": "nyc-bos",
     "agent": "muse",
-    "title": "Reserved Amtrak 10:02 AM, New York → Boston, Wed Oct 14",
+    "title": "Reserved Amtrak 10:02 AM, New York to Boston, Wed Oct 14",
     "detail": "Train beats the bus by an hour for $33 more, and beats flying once you count the airport. $49 USD ≈ $67 CAD.",
     "options": [
       {
-        "label": "Amtrak Northeast Regional 171 · 10:02 AM NYP → BOS",
+        "label": "Amtrak Northeast Regional 171",
         "price": 49,
         "currency": "USD",
         "refundable": true,
@@ -192,11 +215,13 @@
           "depart": "10:02",
           "arrive": "14:10",
           "duration_min": 248,
-          "window_seat": null
+          "window_seat": null,
+          "from": "Penn Station",
+          "to": "South Station"
         }
       },
       {
-        "label": "FlixBus · 9:30 AM Port Authority → South Station",
+        "label": "FlixBus",
         "price": 25,
         "currency": "USD",
         "refundable": false,
@@ -205,24 +230,32 @@
         "facts": {
           "depart": "09:30",
           "arrive": "14:05",
-          "duration_min": 275
+          "duration_min": 275,
+          "from": "Port Authority",
+          "to": "South Station"
         }
       },
       {
-        "label": "Acela 2153 · 10:00 AM NYP → BOS",
+        "label": "Amtrak Acela 2153",
         "price": 137,
         "currency": "USD",
         "refundable": true,
         "source_url": "https://www.amtrak.com/",
         "checked_at": "2026-09-28T02:18:00-04:00",
         "facts": {
-          "duration_min": 215
+          "duration_min": 215,
+          "from": "Penn Station",
+          "to": "South Station",
+          "depart": "10:00",
+          "arrive": "13:35"
         }
       }
     ],
-    "recommended": "Amtrak Northeast Regional 171 · 10:02 AM NYP → BOS",
+    "recommended": "Amtrak Northeast Regional 171",
     "reversible": true,
-    "confidence": "high"
+    "confidence": "high",
+    "headline": "Amtrak to Boston, Wednesday 10:02 AM",
+    "summary": "An hour faster than the bus for $33 more."
   },
   {
     "id": "e11",
@@ -231,7 +264,9 @@
     "thread": "bos-stay",
     "agent": "muse",
     "title": "Boston is pricey Oct 17–18: Head of the Charles regatta",
-    "detail": "Median hostel bed is ~$96 USD that weekend vs ~$61 the weekend before. Booking early matters here."
+    "detail": "Median hostel bed is ~$96 USD that weekend vs ~$61 the weekend before. Booking early matters here.",
+    "headline": "Boston prices jump October 17 and 18",
+    "summary": "It's Head of the Charles weekend. Beds cost about 60% more."
   },
   {
     "id": "e12",
@@ -243,7 +278,7 @@
     "detail": "Cheapest bed within walking distance of the T. Free cancellation until Oct 12, so this was inside your overnight rules.",
     "options": [
       {
-        "label": "HI Boston · 4-bed dorm, Chinatown",
+        "label": "HI Boston",
         "price": 461,
         "currency": "CAD",
         "refundable": true,
@@ -253,12 +288,15 @@
         "facts": {
           "nights": 4,
           "commute_min": 10
-        }
+        },
+        "sub": "4-bed dorm · Chinatown"
       }
     ],
-    "recommended": "HI Boston · 4-bed dorm, Chinatown",
+    "recommended": "HI Boston",
     "reversible": true,
-    "confidence": "high"
+    "confidence": "high",
+    "headline": "HI Boston, four nights",
+    "summary": "Cheapest bed near the T. Free to cancel until October 12."
   },
   {
     "id": "e13",
@@ -266,8 +304,9 @@
     "kind": "search",
     "thread": "return",
     "agent": "muse",
-    "title": "Compared 40 Boston → Toronto options for Sun Oct 18",
-    "detail": "Direct flights all start around $389. Everything cheaper connects."
+    "title": "Compared 40 Boston to Toronto options for Sun Oct 18",
+    "detail": "Direct flights all start around $389. Everything cheaper connects.",
+    "headline": "Compared 40 ways home"
   },
   {
     "id": "e14",
@@ -279,7 +318,7 @@
     "detail": "With everything else, a direct flight puts you ~$37 over $1,500. I put a free 24h hold on the layover fare so it can't disappear, and kept searching. You pick.",
     "options": [
       {
-        "label": "American via Philadelphia · 7:05 AM → 4:40 PM",
+        "label": "American, via Philadelphia",
         "price": 198,
         "currency": "CAD",
         "refundable": true,
@@ -291,11 +330,14 @@
           "depart": "07:05",
           "arrive": "16:40",
           "layover_min": 370,
-          "window_seat": true
+          "window_seat": true,
+          "from": "Boston Logan",
+          "to": "Pearson",
+          "via": "Philadelphia"
         }
       },
       {
-        "label": "Air Canada direct · 5:30 PM → 7:15 PM",
+        "label": "Air Canada, direct",
         "price": 389,
         "currency": "CAD",
         "refundable": true,
@@ -304,11 +346,13 @@
         "facts": {
           "depart": "17:30",
           "arrive": "19:15",
-          "window_seat": true
+          "window_seat": true,
+          "from": "Boston Logan",
+          "to": "Pearson"
         }
       },
       {
-        "label": "Porter direct · 1:15 PM → Billy Bishop 3:05 PM",
+        "label": "Porter, direct",
         "price": 402,
         "currency": "CAD",
         "refundable": true,
@@ -317,14 +361,18 @@
         "facts": {
           "depart": "13:15",
           "arrive": "15:05",
-          "window_seat": true
+          "window_seat": true,
+          "from": "Boston Logan",
+          "to": "Billy Bishop"
         }
       }
     ],
-    "recommended": "American via Philadelphia · 7:05 AM → 4:40 PM",
+    "recommended": "American, via Philadelphia",
     "expires_at": "2026-09-29T03:12:00-04:00",
     "reversible": true,
-    "confidence": "med"
+    "confidence": "med",
+    "headline": "A 6-hour layover, or about $200 more to fly direct",
+    "summary": "The layover is the only way home under budget. It's on hold for 24 hours."
   },
   {
     "id": "e15",
@@ -336,7 +384,7 @@
     "detail": "It was $35 cheaper than your Porter seat, but non-refundable with no seat selection (so no window). Your rules don't let me lock a non-refundable fare while you sleep. Cost of waiting: $35.",
     "options": [
       {
-        "label": "WestJet WS 1210 · 8:15 AM YYZ → LGA (expired)",
+        "label": "WestJet WS 1210 (expired)",
         "price": 179,
         "currency": "CAD",
         "refundable": false,
@@ -344,12 +392,17 @@
         "checked_at": "2026-09-28T03:18:00-04:00",
         "facts": {
           "depart": "08:15",
-          "window_seat": false
+          "window_seat": false,
+          "from": "Pearson",
+          "to": "LaGuardia",
+          "arrive": "09:40"
         }
       }
     ],
     "lost_savings_cad": 35,
-    "confidence": "high"
+    "confidence": "high",
+    "headline": "Let a $179 fare expire at 3:40 AM",
+    "summary": "It was non-refundable with no window seat, so outside my rules. Cost of waiting: $35."
   },
   {
     "id": "e16",
@@ -361,7 +414,7 @@
     "detail": "The listing showed $461; checkout adds Boston room tax and a booking fee. That puts overnight reservations at $793, $43 past the $750 you allowed me without asking. I should have checked checkout totals first. It's still free to cancel.",
     "options": [
       {
-        "label": "HI Boston · 4-bed dorm, Chinatown (with taxes)",
+        "label": "HI Boston (with taxes)",
         "price": 512,
         "currency": "CAD",
         "refundable": true,
@@ -370,11 +423,14 @@
         "checked_at": "2026-09-28T04:08:00-04:00",
         "facts": {
           "nights": 4
-        }
+        },
+        "sub": "4-bed dorm · Chinatown"
       }
     ],
     "confidence": "high",
-    "corrects": "e12"
+    "corrects": "e12",
+    "headline": "Boston is $512 with taxes, not $461",
+    "summary": "I missed checkout fees, which put me over your $750 overnight limit."
   },
   {
     "id": "e17",
@@ -383,7 +439,8 @@
     "thread": "return",
     "agent": "muse",
     "title": "Checked Providence and Manchester airports for the return",
-    "detail": "PVD → YYZ saves $22 but needs a $39 train to Providence. Not worth it."
+    "detail": "PVD to YYZ saves $22 but needs a $39 train to Providence. Not worth it.",
+    "headline": "Nearby airports don't save money"
   },
   {
     "id": "e18",
@@ -391,11 +448,11 @@
     "kind": "update",
     "thread": "return",
     "agent": "muse",
-    "title": "New option: overnight bus Boston → Toronto, $119",
+    "title": "New option: overnight bus Boston to Toronto, $119",
     "detail": "Leaves Sat Oct 17 at 10:30 PM, arrives Toronto 9:55 AM Sunday. 13.5 hours, but you'd skip the last hostel night (~$128 back). Added to your return decision.",
     "options": [
       {
-        "label": "FlixBus overnight · Sat 10:30 PM → Sun 9:55 AM",
+        "label": "FlixBus, overnight",
         "price": 119,
         "currency": "CAD",
         "refundable": false,
@@ -405,12 +462,17 @@
         "facts": {
           "depart": "22:30",
           "arrive": "09:55",
-          "duration_min": 805
-        }
+          "duration_min": 805,
+          "from": "South Station",
+          "to": "Union Station"
+        },
+        "sub": "Sat night to Sun morning, change in Buffalo"
       }
     ],
     "confidence": "med",
-    "updates": "e14"
+    "updates": "e14",
+    "headline": "Found an overnight bus home for $119",
+    "summary": "13.5 hours, but it saves the last night in Boston."
   },
   {
     "id": "e19",
@@ -419,7 +481,8 @@
     "thread": "seats",
     "agent": "muse",
     "title": "Window seats: 1 of 3 legs locked",
-    "detail": "14A on the Porter flight. Amtrak is unassigned. The return depends on which option you pick; all three flights still have windows."
+    "detail": "14A on the Porter flight. Amtrak is unassigned. The return depends on which option you pick; all three flights still have windows.",
+    "headline": "Window seat on one of three legs so far"
   },
   {
     "id": "e20",
@@ -431,7 +494,7 @@
     "detail": "Air Canada direct is now $412 (was $389 at 3:08 AM). The layover hold is unchanged at $198.",
     "options": [
       {
-        "label": "Air Canada direct · 5:30 PM → 7:15 PM",
+        "label": "Air Canada, direct",
         "price": 412,
         "currency": "CAD",
         "refundable": true,
@@ -440,12 +503,15 @@
         "facts": {
           "depart": "17:30",
           "arrive": "19:15",
-          "window_seat": true
+          "window_seat": true,
+          "from": "Boston Logan",
+          "to": "Pearson"
         }
       }
     ],
     "confidence": "high",
-    "updates": "e14"
+    "updates": "e14",
+    "headline": "The direct flight home went up $23"
   },
   {
     "id": "e21",
@@ -454,6 +520,8 @@
     "thread": "other",
     "agent": "muse",
     "title": "Done for the night",
-    "detail": "214 searches over 7h 44m. Three things reserved (all free to cancel), one fare on hold, two decisions waiting for you."
+    "detail": "214 searches over 7h 44m. Three things reserved (all free to cancel), one fare on hold, two decisions waiting for you.",
+    "headline": "Done for the night",
+    "summary": "214 searches. Three bookings, one hold, two questions for you."
   }
 ]

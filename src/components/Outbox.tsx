@@ -41,20 +41,20 @@ export function Outbox({ brief }: { brief: Brief }) {
   return (
     <>
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-rule-strong bg-paper">
-        <div className="mx-auto flex max-w-[460px] items-center justify-between gap-3 px-4 py-3">
+        <div className="mx-auto flex max-w-[720px] items-center justify-between gap-4 px-5 py-4 sm:px-10">
           <div className="min-w-0 text-[13.5px] leading-tight">
             {s.sentAt ? (
               <>
                 <div className="font-medium">Sent to Muse</div>
                 <div className="text-[12px] text-muted">
-                  {ago(new Date(sentAtDemo!).toISOString(), now)}. It usually confirms within a few minutes.
+                  {ago(new Date(sentAtDemo!).toISOString(), now)}. Waiting for Muse to confirm.
                 </div>
               </>
             ) : (
               <>
                 <div className="font-medium">Your reply to Muse</div>
-                <div className="text-[12px] text-muted">
-                  {n} change{n === 1 ? "" : "s"} · nothing is sent until you say so
+                <div className="text-[12.5px] text-muted">
+                  {n} change{n === 1 ? "" : "s"}, not sent yet
                 </div>
               </>
             )}
@@ -66,10 +66,8 @@ export function Outbox({ brief }: { brief: Brief }) {
       </div>
 
       <Sheet open={open} onClose={() => setOpen(false)} title="Your reply to Muse">
-        <p className="text-[13px] leading-relaxed text-ink-2">
-          One message with all your changes, so Muse gets a single clear instruction instead of five pings. Edit anything above and this updates.
-        </p>
-        <pre className="mt-3 whitespace-pre-wrap border border-rule bg-card p-3 font-sans text-[14px] leading-relaxed">{message}</pre>
+        <p className="text-[14px] leading-relaxed text-ink-2">Everything you changed, as one message.</p>
+        <pre className="mt-4 whitespace-pre-wrap border border-rule bg-card p-3 font-sans text-[14px] leading-relaxed">{message}</pre>
         <div className="mt-3 flex items-center gap-2">
           <Btn kind="primary" onClick={send}>
             {copied ? "Copied. Paste in Muse" : "Copy & open Muse"}

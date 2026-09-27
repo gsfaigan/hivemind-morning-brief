@@ -22,17 +22,21 @@ export type Thread =
   | "other";
 
 export interface OptionFacts {
+  from?: string; // place names for the stacked departure/arrival block
+  to?: string;
+  via?: string;
   depart?: string; // "06:50"
   arrive?: string;
   layover_min?: number;
   duration_min?: number;
-  commute_min?: number; // lodging → main sights
+  commute_min?: number; // lodging to main sights
   nights?: number;
   window_seat?: boolean | null;
 }
 
 export interface Option {
-  label: string;
+  label: string; // carrier or place, short, no route
+  sub?: string; // room type, neighbourhood, etc.
   price: number;
   currency: string;
   price_cad?: number; // normalized at ingest
@@ -50,7 +54,9 @@ export interface LogEvent {
   ts: string;
   kind: Kind;
   title: string;
-  detail: string;
+  detail: string; // Muse's full note, shown behind "Why"
+  headline?: string; // under ~50 chars, the point in plain words
+  summary?: string; // one sentence
   options?: Option[];
   recommended?: string | null;
   expires_at?: string | null;

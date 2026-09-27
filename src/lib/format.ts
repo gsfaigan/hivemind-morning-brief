@@ -50,3 +50,11 @@ export function minutes(m: number) {
   const r = m % 60;
   return h ? `${h}h${r ? ` ${r}m` : ""}` : `${r}m`;
 }
+
+export function ampm(hhmm: string) {
+  const [h, m] = hhmm.split(":").map(Number);
+  return `${((h + 11) % 12) + 1}:${String(m).padStart(2, "0")}\u202f${h < 12 ? "AM" : "PM"}`;
+}
+
+const WORDS = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
+export const countWord = (n: number) => WORDS[n] ?? String(n);

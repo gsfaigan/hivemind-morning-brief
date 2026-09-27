@@ -8,15 +8,15 @@ import { day, money } from "@/lib/format";
 import { useProposals } from "@/lib/learn";
 import { useStore } from "@/lib/store";
 import { Outbox } from "./Outbox";
-import { Btn, Section, Tag } from "./ui";
+import { Btn, Nav, Page, Section, Tag } from "./ui";
 
 export function Trust({ brief }: { brief: Brief }) {
   const { s, dispatch, queue } = useStore();
   const proposals = useProposals(brief);
   const [hover, setHover] = useState<number | null>(null);
-  const kept = brief.actions.filter((a) => a.rule.refundable && a.rule.cancelsAfterWake && a.rule.withinPreauth).length;
   const trips = history.trips;
   const maxQ = Math.max(...trips.map((t) => t.asked + t.auto));
+  const kept = brief.actions.filter((a) => a.rule.refundable && a.rule.cancelsAfterWake && a.rule.withinPreauth).length;
 
   const decide = (id: string, rule: string, v: "accepted" | "declined") => {
     dispatch({ t: "rule", id, v });
@@ -24,61 +24,65 @@ export function Trust({ brief }: { brief: Brief }) {
   };
 
   return (
-    <div className="mx-auto max-w-[460px] px-4 pb-40 pt-6">
-      <nav className="flex items-center justify-between text-[13px]">
-        <span className="eyebrow">{day(brief.run.wake_at)}</span>
-        <div className="flex gap-4 text-muted">
-          <Link href="/" className="hover:text-ink">Brief</Link>
-          <Link href="/night" className="hover:text-ink">Night log</Link>
-          <span className="text-ink">Trust</span>
-        </div>
-      </nav>
+    <Page>
+      <Nav here="trust" date={day(brief.run.wake_at)} />
 
-      <h1 className="mt-6 text-[28px] font-semibold leading-tight tracking-[-0.02em]">What Muse may do without you</h1>
-      <p className="mt-2 text-[14.5px] leading-relaxed text-ink-2">
-        The line is reversibility, not price. Muse acts alone only when you could undo it after waking up, for free. Everything else waits for you.
-      </p>
+      <header className="mt-12 sm:mt-16">
+        <h1 className="text-[36px] font-semibold leading-[1.05] tracking-[-0.025em] sm:text-[44px]">The line is reversibility.</h1>
+        <p className="mt-4 text-[18px] leading-snug text-ink-2 sm:text-[19px]">Muse acts alone only when you could undo it for free after you wake up.</p>
+      </header>
 
-      <Section label="Tonight's rules" aside="trip 1">
-        <dl className="border-t border-rule text-[14px]">
-          <Rule k="Alone" tone="ok" v={`Reserve anything refundable whose free-cancel window lasts past 8 AM, up to ${money(brief.spend.preauth)} total. Put free holds on fares. Pick seats. Search.`} />
-          <Rule k="Waits" tone="act" v={`Anything non-refundable. Anything that takes the night past ${money(brief.spend.preauth)}. Anything that bends what you asked for (dates, cities, the $1,500). Taste calls where the options are close.`} />
-          <Rule k="Never" tone="bad" v="Wake you up. Enter a card for something that can't be undone." />
+      <Section label="Tonight's rules">
+        <dl className="border-t border-rule">
+          <Rule k="Alone" tone="ok" v={`Refundable bookings that stay cancellable past 8 AM, up to ${money(brief.spend.preauth)}. Holds. Seats.`} />
+          <Rule k="Waits" tone="act" v={`Anything non-refundable, over ${money(brief.spend.preauth)}, or outside what you asked for.`} />
+          <Rule k="Never" tone="problem" v="Wakes you up." />
         </dl>
-        <p className="mt-3 text-[13px] leading-relaxed text-ink-2">
-          Last night Muse stayed inside these {kept} of {brief.actions.length} times. It went {money(brief.spend.reserved - brief.spend.preauth)} past the limit once, because it missed Boston hotel tax, and told you itself at 4:10 AM. It let one fare expire rather than break a rule, and logged what that cost.
+        <p className="mt-5 text-[14px] text-muted">
+          Last night: inside the rules {kept} of {brief.actions.length} times. One miss, which it reported itself.
         </p>
       </Section>
 
-      <Section label="Learned from this morning" count={proposals.length}>
+      <Section label="Learned this morning" count={proposals.length}>
         {proposals.length === 0 ? (
-          <p className="border-t border-rule pt-3 text-[13.5px] leading-relaxed text-muted">
-            Nothing yet. When you go against one of Muse&apos;s picks on the{" "}
-            <Link href="/" className="underline underline-offset-2">brief</Link>, undo something, or correct an assumption, it proposes a rule here. Nothing becomes a rule until you accept it.
+          <p className="border-t border-rule pt-5 text-[15px] leading-relaxed text-muted">
+            Go against a pick on the{" "}
+            <Link href="/" className="underline decoration-rule underline-offset-4 hover:text-ink">
+              brief
+            </Link>{" "}
+            and a rule shows up here. Nothing sticks until you accept it.
           </p>
         ) : (
           <ul className="border-t border-rule">
             {proposals.map((p) => {
               const v = s.rules[p.id];
               return (
-                <li key={p.id} className="border-b border-rule py-3">
-                  <p className="text-[12.5px] text-muted">{p.because}</p>
-                  <p className="mt-0.5 text-[14.5px] font-medium leading-snug">{p.rule}</p>
-                  <div className="mt-2 flex items-center gap-2">
+                <li key={p.id} className="border-b border-rule py-6">
+                  <p className="text-[17px] font-medium leading-snug">{p.rule}</p>
+                  <p className="mt-1.5 text-[13.5px] text-muted">{p.because}</p>
+                  <div className="mt-4 flex items-center gap-3">
                     {v === "accepted" ? (
                       <>
-                        <Tag tone="ok">Rule · in your reply to Muse</Tag>
-                        <button type="button" className="text-[12px] text-muted underline" onClick={() => decide(p.id, p.rule, "declined")}>undo</button>
+                        <Tag tone="ok">Rule, in your reply</Tag>
+                        <button type="button" className="text-[13px] text-muted underline decoration-rule underline-offset-4" onClick={() => decide(p.id, p.rule, "declined")}>
+                          Undo
+                        </button>
                       </>
                     ) : v === "declined" ? (
                       <>
-                        <Tag>Not a rule. Muse will ask again</Tag>
-                        <button type="button" className="text-[12px] text-muted underline" onClick={() => decide(p.id, p.rule, "accepted")}>make it one</button>
+                        <Tag>Just this once</Tag>
+                        <button type="button" className="text-[13px] text-muted underline decoration-rule underline-offset-4" onClick={() => decide(p.id, p.rule, "accepted")}>
+                          Make it a rule
+                        </button>
                       </>
                     ) : (
                       <>
-                        <Btn kind="primary" className="!px-2.5 !py-1 !text-[12.5px]" onClick={() => decide(p.id, p.rule, "accepted")}>Make it a rule</Btn>
-                        <Btn kind="ghost" className="!text-[12.5px]" onClick={() => decide(p.id, p.rule, "declined")}>Just this once</Btn>
+                        <Btn kind="primary" className="!px-3.5 !py-1.5 !text-[13.5px]" onClick={() => decide(p.id, p.rule, "accepted")}>
+                          Make it a rule
+                        </Btn>
+                        <Btn kind="ghost" className="!text-[13.5px]" onClick={() => decide(p.id, p.rule, "declined")}>
+                          Just this once
+                        </Btn>
                       </>
                     )}
                   </div>
@@ -89,106 +93,95 @@ export function Trust({ brief }: { brief: Brief }) {
         )}
       </Section>
 
-      <Section label="Trip 1 → trip 10" aside={<Tag tone="warn">Simulated after trip 1</Tag>}>
-        <p className="text-[13.5px] leading-relaxed text-ink-2">
-          Autonomy is earned per category, from how often you&apos;d have made the same call. It&apos;s lost faster than it&apos;s gained, and irreversible spending never becomes automatic.
+      <Section label="Trip 1 vs. trip 10" aside={<Tag tone="tradeoff">Simulated</Tag>}>
+        <p className="text-[16px] leading-relaxed text-ink-2">
+          Trust is earned per category and lost faster than it&apos;s gained. Irreversible spending never becomes automatic.
         </p>
 
-        <figure className="mt-5">
-          <figcaption className="flex items-baseline justify-between text-[12.5px]">
-            <span className="font-medium">Decisions Muse brought to you, per trip</span>
-            <span className="text-muted">of all it made</span>
-          </figcaption>
-          <div className="relative mt-3 flex h-36 items-end gap-[2px] border-b border-rule-strong" onMouseLeave={() => setHover(null)}>
+        <figure className="mt-10">
+          <figcaption className="text-[13.5px] font-medium">Decisions Muse brought to you</figcaption>
+          <div className="relative mt-6 flex h-40 items-end gap-[2px] border-b border-rule-strong" onMouseLeave={() => setHover(null)}>
             {trips.map((t, i) => {
               const total = t.asked + t.auto;
               return (
                 <div
                   key={t.n}
-                  className="relative flex h-full flex-1 flex-col justify-end"
+                  className="relative flex h-full flex-1 flex-col justify-end outline-none"
                   onMouseEnter={() => setHover(i)}
                   onFocus={() => setHover(i)}
+                  onBlur={() => setHover(null)}
                   tabIndex={0}
                   aria-label={`Trip ${t.n}: asked ${t.asked} of ${total}`}
                 >
                   <div className="border border-b-0 border-rule" style={{ height: `${(t.auto / maxQ) * 100}%` }} />
                   <div className={t.event ? "bg-act" : "bg-ink"} style={{ height: `${(t.asked / maxQ) * 100}%` }} />
-                  {t.event && <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 text-[10px] text-act">▼</span>}
                 </div>
               );
             })}
             {hover !== null && (
               <div
-                className="pointer-events-none absolute bottom-full z-10 mb-2 w-52 -translate-x-1/2 border border-rule-strong bg-paper px-2.5 py-2 text-[12px] leading-snug"
-                style={{ left: `${Math.min(80, Math.max(20, ((hover + 0.5) / trips.length) * 100))}%` }}
+                className="pointer-events-none absolute bottom-full z-10 mb-3 w-56 -translate-x-1/2 border border-rule-strong bg-paper px-3 py-2.5 text-[12.5px] leading-snug"
+                style={{ left: `${Math.min(78, Math.max(22, ((hover + 0.5) / trips.length) * 100))}%` }}
               >
-                <div className="font-medium">Trip {trips[hover].n} · {trips[hover].name}</div>
-                <div className="num mt-0.5 text-ink-2">
-                  Asked you {trips[hover].asked} of {trips[hover].asked + trips[hover].auto} · limit {money(trips[hover].preauth)}
+                <div className="font-medium">{trips[hover].name}</div>
+                <div className="num mt-1 text-ink-2">
+                  Asked {trips[hover].asked} of {trips[hover].asked + trips[hover].auto} · limit {money(trips[hover].preauth)}
                 </div>
-                {trips[hover].event && <div className="mt-1 text-act">{trips[hover].event}</div>}
+                {trips[hover].event && <div className="mt-1.5 text-act">{trips[hover].event}</div>}
               </div>
             )}
           </div>
-          <div className="num mt-1 flex text-[10.5px] text-muted">
+          <div className="num mt-2 flex text-[11.5px] text-muted">
             {trips.map((t) => (
-              <span key={t.n} className="flex-1 text-center">{t.n}</span>
+              <span key={t.n} className="flex-1 text-center">
+                {t.n}
+              </span>
             ))}
           </div>
-          <div className="mt-2 flex flex-wrap gap-x-3 text-[11px] text-muted">
-            <span className="flex items-center gap-1"><span className="inline-block size-2 bg-ink" /> Asked you</span>
-            <span className="flex items-center gap-1"><span className="inline-block size-2 border border-rule" /> Handled alone</span>
-            <span className="flex items-center gap-1"><span className="inline-block size-2 bg-act" /> Trust reset</span>
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-[12.5px] text-muted">
+            <span className="flex items-center gap-2"><span className="inline-block size-2.5 bg-ink" /> Asked you</span>
+            <span className="flex items-center gap-2"><span className="inline-block size-2.5 border border-rule" /> Handled alone</span>
+            <span className="flex items-center gap-2"><span className="inline-block size-2.5 bg-act" /> Trust reset</span>
           </div>
-          <p className="mt-3 border-l-2 border-act pl-3 text-[12.5px] leading-relaxed text-ink-2">
-            Trip 6: {trips[5].event}
-          </p>
+          <p className="mt-6 border-l-2 border-act pl-4 text-[14px] leading-relaxed text-ink-2">Trip 6: {trips[5].event}</p>
         </figure>
 
-        <table className="mt-6 w-full border-t border-rule text-left text-[13px]">
-          <thead>
-            <tr className="text-[11px] text-muted">
-              <th className="py-2 font-medium">Category</th>
-              <th className="py-2 font-medium">Trip 1</th>
-              <th className="py-2 font-medium">Trip 10</th>
-            </tr>
-          </thead>
-          <tbody>
-            {history.categories.map((c) => (
-              <tr key={c.name} className="border-t border-rule align-top">
-                <td className="py-2.5 pr-2 font-medium">{c.name}</td>
-                <td className="py-2.5 pr-2 text-ink-2">{c.trip1}</td>
-                <td className="py-2.5">
-                  <div>{c.trip10}</div>
-                  <div className="mt-0.5 text-[11.5px] text-muted">{c.evidence}</div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="mt-14 border-t border-rule">
+          {history.categories.map((c) => (
+            <div key={c.name} className="grid gap-x-6 gap-y-1 border-b border-rule py-5 sm:grid-cols-[140px_1fr]">
+              <div className="text-[15px] font-medium">{c.name}</div>
+              <div>
+                <div className="text-[15px]">{c.trip10}</div>
+                <div className="mt-1 text-[13px] text-muted">{c.evidence}</div>
+              </div>
+            </div>
+          ))}
+        </div>
 
-        <h3 className="eyebrow mt-6">Rules it learned along the way</h3>
-        <ol className="mt-2 border-t border-rule">
+        <h3 className="eyebrow mt-14">Rules it picked up</h3>
+        <ol className="mt-4 border-t border-rule">
           {history.learned.map((r) => (
-            <li key={r.rule} className="flex gap-3 border-b border-rule py-2 text-[13.5px]">
-              <span className="num w-12 shrink-0 text-muted">Trip {r.trip}</span>
+            <li key={r.rule} className="flex gap-5 border-b border-rule py-4 text-[15px]">
+              <span className="num w-14 shrink-0 text-muted">Trip {r.trip}</span>
               <span>{r.rule}</span>
             </li>
           ))}
         </ol>
-        <p className="mt-3 text-[11.5px] text-muted">{history.note}</p>
+        <p className="mt-6 text-[12.5px] text-muted">Only trip 1 is real. Trips 2 to 10 are simulated.</p>
       </Section>
 
       <Outbox brief={brief} />
-    </div>
+    </Page>
   );
 }
 
-function Rule({ k, v, tone }: { k: string; v: string; tone: "ok" | "act" | "bad" }) {
+function Rule({ k, v, tone }: { k: string; v: string; tone: "ok" | "act" | "problem" }) {
   return (
-    <div className="grid grid-cols-[64px_1fr] gap-3 border-b border-rule py-2.5">
-      <dt><Tag tone={tone}>{k}</Tag></dt>
-      <dd className="leading-relaxed text-ink-2">{v}</dd>
+    <div className="grid grid-cols-[72px_1fr] gap-4 border-b border-rule py-5">
+      <dt>
+        <Tag tone={tone}>{k}</Tag>
+      </dt>
+      <dd className="text-[15.5px] leading-relaxed">{v}</dd>
     </div>
   );
 }

@@ -3,106 +3,72 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { ActionView, Brief as BriefT } from "@/lib/derive";
-import { clock, day, money, until } from "@/lib/format";
+import { clock, countWord, day, money, until } from "@/lib/format";
 import { useLive } from "@/lib/live";
 import { useStore } from "@/lib/store";
 import type { LogEvent } from "@/lib/types";
-import { DecisionCard } from "./DecisionCard";
 import { AuditSheet } from "./AuditSheet";
+import { DecisionCard, LEG_LABEL, NoteLines, OptionBody, headline } from "./DecisionCard";
 import { Outbox } from "./Outbox";
-import { AuditTag, Btn, FlagTag, Section, Tag } from "./ui";
+import { Btn, Nav, Page, Section, Tag } from "./ui";
 
-const LEGS: { thread: string; label: string; when: string }[] = [
-  { thread: "out", label: "Toronto → New York", when: "Sat Oct 10" },
-  { thread: "nyc-stay", label: "New York bed", when: "4 nights" },
-  { thread: "nyc-bos", label: "New York → Boston", when: "Wed Oct 14" },
-  { thread: "bos-stay", label: "Boston bed", when: "4 nights" },
-  { thread: "return", label: "Boston → Toronto", when: "Sun Oct 18" },
-];
+const LEGS = ["out", "nyc-stay", "nyc-bos", "bos-stay", "return"];
 
 export function Brief({ brief }: { brief: BriefT }) {
   const [auditFor, setAuditFor] = useState<string | null>(null);
-  const { s } = useStore();
   const live = useLive(brief);
   const { run } = brief;
-  const hours = (new Date(run.ended_at).getTime() - new Date(run.started_at).getTime()) / 3600e3;
   const verified = brief.audit.claims.filter((c) => c.status === "verified").length;
-  const problems = brief.audit.claims.filter((c) => c.status === "conflict" || c.status === "unsourced").length;
-  const openCount = live.open.length;
-  const searches = brief.timeline.find((e) => /searches/.test(e.detail))?.detail.match(/(\d+) searches/)?.[1];
+  const n = live.open.length;
 
   return (
-    <div className="mx-auto max-w-[460px] px-4 pb-40 pt-6">
+    <Page>
       {run.sample && (
-        <div className="mb-5 border border-warn bg-warn-bg px-3 py-2 text-[12.5px] text-warn">
-          Sample data. The real overnight Muse log replaces this.
-        </div>
+        <div className="mb-8 border border-warn px-4 py-2.5 text-[13px] text-warn">Sample data until the real overnight log is in.</div>
       )}
+      <Nav here="brief" date={day(run.wake_at)} />
 
-      <nav className="flex items-center justify-between text-[13px]">
-        <span className="eyebrow">{day(run.wake_at)}</span>
-        <div className="flex gap-4 text-muted">
-          <span className="text-ink">Brief</span>
-          <Link href="/night" className="hover:text-ink">Night log</Link>
-          <Link href="/trust" className="hover:text-ink">Trust</Link>
-        </div>
-      </nav>
-
-      <header className="mt-6">
-        <h1 className="text-[34px] font-semibold leading-[1.05] tracking-[-0.025em]">Good morning, Gabe.</h1>
-        <p className="mt-3 text-[16.5px] leading-relaxed text-ink-2">
-          Muse worked on your reading-week trip for {hours.toFixed(0)} hours while you slept. It reserved{" "}
-          {brief.actions.length} things, all free to cancel, and{" "}
-          {openCount ? (
-            <a href="#needs-you" className="font-medium text-act underline underline-offset-4">
-              needs you for {openCount}
-            </a>
+      <header className="mt-12 sm:mt-16">
+        <h1 className="text-[40px] font-semibold leading-[1.02] tracking-[-0.03em] sm:text-[52px]">Good morning, Gabe.</h1>
+        <p className="mt-4 text-[19px] leading-snug text-ink-2 sm:text-[21px]">
+          {n ? (
+            <>
+              <a href="#needs-you" className="text-act underline decoration-1 underline-offset-[5px]">
+                {countWord(n)} decision{n === 1 ? "" : "s"} need{n === 1 ? "s" : ""} you.
+              </a>{" "}
+              The rest is handled.
+            </>
           ) : (
-            <span className="font-medium text-ok">has nothing left for you to decide</span>
+            "Nothing needs you. Send your reply when ready."
           )}
-          .
         </p>
-        <dl className="mt-4 grid grid-cols-3 border-y border-rule text-[12px]">
-          <div className="py-2">
-            <dt className="text-muted">Worked</dt>
-            <dd className="num mt-0.5 text-[14px] font-medium">
-              {clock(run.started_at).replace(/\s?[AP]M/, "")}–{clock(run.ended_at)}
-            </dd>
-          </div>
-          <div className="border-l border-rule py-2 pl-3">
-            <dt className="text-muted">Searches</dt>
-            <dd className="num mt-0.5 text-[14px] font-medium">{searches ?? brief.searches.length}</dd>
-          </div>
-          <div className="border-l border-rule py-2 pl-3">
-            <dt className="text-muted">Fact-check</dt>
-            <dd className="mt-0.5 text-[14px] font-medium">
-              <button type="button" onClick={() => setAuditFor("all")} className="num underline decoration-rule underline-offset-4 hover:decoration-ink">
-                {verified}/{brief.audit.claims.length} hold up
-              </button>
-            </dd>
-          </div>
-        </dl>
+        <p className="mt-5 flex flex-wrap gap-x-5 gap-y-1 text-[13.5px] text-muted">
+          <span>
+            Muse worked {clock(run.started_at).replace(/\s?[AP]M/, "")}–{clock(run.ended_at)}
+          </span>
+          <button type="button" onClick={() => setAuditFor("all")} className="underline decoration-rule underline-offset-4 hover:text-ink">
+            {verified} of {brief.audit.claims.length} facts check out
+          </button>
+          {brief.problemCount > 0 && <span className="text-bad">{brief.problemCount} flagged below</span>}
+        </p>
       </header>
 
-      <SpendMeter brief={brief} />
+      <Budget brief={brief} />
+      <Trip brief={brief} />
 
-      <TripStrip brief={brief} />
-
-      {openCount > 0 && (
-        <Section id="needs-you" label="Needs you" count={openCount} aside={`about ${openCount * 45}s`}>
-          <div className="space-y-4">
-            {brief.decisions
-              .filter((d) => (s.decisions[d.event.id]?.status ?? "open") === "open")
-              .map((d) => (
-                <DecisionCard key={d.event.id} d={d} brief={brief} onAudit={setAuditFor} />
-              ))}
+      {n > 0 && (
+        <Section id="needs-you" label="Needs you" count={n}>
+          <div className="space-y-8">
+            {live.open.map((d) => (
+              <DecisionCard key={d.event.id} d={d} brief={brief} onAudit={setAuditFor} />
+            ))}
           </div>
         </Section>
       )}
 
       {live.decided.length > 0 && (
         <Section label="You decided" count={live.decided.length}>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {live.decided.map((d) => (
               <DecisionCard key={d.event.id} d={d} brief={brief} onAudit={setAuditFor} />
             ))}
@@ -110,30 +76,15 @@ export function Brief({ brief }: { brief: BriefT }) {
         </Section>
       )}
 
-      {brief.checkFirst.length > 0 && (
-        <Section label="Worth a second look" count={brief.checkFirst.length} aside={problems ? `${problems} flagged by the fact-check` : undefined}>
-          <ul className="border-t border-rule">
-            {brief.checkFirst.map((c, i) => (
-              <li key={i} className="flex gap-2.5 border-b border-rule py-2.5 text-[14px] leading-snug">
-                <span aria-hidden className={`mt-[3px] inline-block size-2 shrink-0 ${c.level === "bad" ? "bg-bad" : c.level === "warn" ? "bg-warn" : "bg-rule"}`} />
-                <button type="button" className="text-left hover:underline" onClick={() => setAuditFor(c.event_id)}>
-                  {c.text}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </Section>
-      )}
-
-      <Section label="Done without you" count={brief.actions.length} aside="all reversible">
-        <div className="space-y-3">
+      <Section label="Done without you" count={brief.actions.length} aside="Free to undo">
+        <div className="border-t border-rule">
           {brief.actions.map((a) => (
             <ActionRow key={a.event.id} a={a} brief={brief} onAudit={setAuditFor} />
           ))}
         </div>
       </Section>
 
-      <Section label="Assumptions Muse made" count={brief.assumptions.length} aside="flip any of them">
+      <Section label="Assumptions" count={brief.assumptions.length}>
         <div className="border-t border-rule">
           {brief.assumptions.map((e) => (
             <AssumptionRow key={e.id} e={e} />
@@ -142,114 +93,103 @@ export function Brief({ brief }: { brief: BriefT }) {
       </Section>
 
       <Section label="For your information" count={brief.updates.length}>
-        <ul className="border-t border-rule">
+        <div className="border-t border-rule">
           {brief.updates.map((e) => (
-            <li key={e.id} className="border-b border-rule py-2.5">
-              <div className="flex items-baseline justify-between gap-3">
-                <span className="text-[14px] font-medium leading-snug">{e.title}</span>
-                <span className="num shrink-0 text-[12px] text-muted">{clock(e.ts)}</span>
-              </div>
-              <p className="mt-0.5 text-[13px] leading-relaxed text-ink-2">{e.detail}</p>
-            </li>
+            <UpdateRow key={e.id} e={e} />
           ))}
-        </ul>
-        <Link href="/night" className="mt-3 inline-block text-[13px] text-muted underline underline-offset-4 hover:text-ink">
-          All {brief.timeline.length} entries from last night →
+        </div>
+        <Link href="/night" className="mt-6 inline-block text-[14px] text-muted underline decoration-rule underline-offset-4 hover:text-ink">
+          The full night log
         </Link>
       </Section>
 
       <AuditSheet brief={brief} eventId={auditFor} onClose={() => setAuditFor(null)} />
       <Outbox brief={brief} />
-    </div>
+    </Page>
   );
 }
 
-function SpendMeter({ brief }: { brief: BriefT }) {
+function Budget({ brief }: { brief: BriefT }) {
   const l = useLive(brief);
+  const [open, setOpen] = useState(false);
   const max = Math.max(l.budget, l.projected) * 1.04;
-  const pct = (n: number) => `${(n / max) * 100}%`;
+  const pct = (v: number) => `${(v / max) * 100}%`;
   const left = l.budget - l.projected;
   return (
-    <section className="mt-8" aria-label="Budget">
-      <div className="flex items-baseline justify-between">
-        <span className="eyebrow">Budget</span>
-        <span className={`num text-[13px] ${left < 0 ? "text-bad" : "text-ink-2"}`}>
-          {left >= 0 ? `${money(left)} left if you take Muse's picks` : `${money(-left)} over`}
-        </span>
+    <section className="mt-14 sm:mt-20" aria-label="Budget">
+      <div className="flex items-baseline justify-between gap-4">
+        <div>
+          <span className={`num text-[34px] font-semibold tracking-[-0.02em] ${left < 0 ? "text-bad" : ""}`}>{money(Math.abs(left))}</span>
+          <span className="ml-2 text-[15px] text-muted">{left >= 0 ? "left" : "over"} of {money(l.budget)}</span>
+        </div>
+        <button type="button" onClick={() => setOpen(!open)} className="text-[13px] text-muted underline decoration-rule underline-offset-4 hover:text-ink">
+          {open ? "Hide" : "Breakdown"}
+        </button>
       </div>
-      <div className="num mt-1 text-[28px] font-semibold tracking-[-0.02em]">
-        {money(l.projected)} <span className="text-[16px] font-normal text-muted">of {money(l.budget)}</span>
+      <div className="relative mt-4 h-2.5 bg-rule/60">
+        <div className="absolute inset-y-0 left-0 bg-ink" style={{ width: pct(l.reserved) }} title={`Reserved ${money(l.reserved)}`} />
+        <div className="absolute inset-y-0 bg-ink-2" style={{ left: pct(l.reserved), width: pct(l.chosen) }} title={`Your picks ${money(l.chosen)}`} />
+        <div className="absolute inset-y-0 bg-muted/50" style={{ left: pct(l.reserved + l.chosen), width: pct(l.pending) }} title={`Waiting on you ${money(l.pending)}`} />
+        <div className="absolute -inset-y-2 w-px bg-act" style={{ left: pct(l.preauth) }} />
+        <div className="absolute -inset-y-2 w-0.5 bg-ink" style={{ left: pct(l.budget) }} />
       </div>
-      <div className="relative mt-3 h-3 border border-rule-strong">
-        <div className="absolute inset-y-0 left-0 bg-ink" style={{ width: pct(l.reserved) }} />
-        <div className="absolute inset-y-0 bg-ink-2" style={{ left: pct(l.reserved), width: pct(l.chosen) }} />
-        <div className="absolute inset-y-0 bg-rule" style={{ left: pct(l.reserved + l.chosen), width: pct(l.pending) }} />
-        <div className="absolute -inset-y-1.5 w-px bg-act" style={{ left: pct(l.preauth) }} title="Overnight limit" />
-        <div className="absolute -inset-y-1.5 w-0.5 bg-ink" style={{ left: pct(l.budget) }} />
-      </div>
-      <div className="relative mt-1 h-4 text-[10.5px] text-muted">
-        <span className="absolute -translate-x-1/2 text-act" style={{ left: pct(l.preauth) }}>
+      <div className="relative mt-2 h-4 text-[12px]">
+        <span className="absolute -translate-x-1/2 whitespace-nowrap text-act" style={{ left: pct(l.preauth) }}>
           {money(l.preauth)} overnight limit
         </span>
       </div>
-      <dl className="mt-2 grid grid-cols-3 gap-2 text-[12px]">
-        <Legend sw="bg-ink" k="Reserved" v={l.reserved} />
-        <Legend sw="bg-ink-2" k="Your picks" v={l.chosen} />
-        <Legend sw="bg-rule" k="Waiting on you" v={l.pending} />
-      </dl>
+      {open && (
+        <dl className="mt-5 grid grid-cols-3 gap-4 text-[13px]">
+          {[
+            ["bg-ink", "Reserved", l.reserved],
+            ["bg-ink-2", "Your picks", l.chosen],
+            ["bg-muted/50", "Waiting on you", l.pending],
+          ].map(([sw, k, v]) => (
+            <div key={k as string}>
+              <dt className="flex items-center gap-2 text-muted">
+                <span aria-hidden className={`inline-block size-2.5 ${sw}`} />
+                {k}
+              </dt>
+              <dd className="num mt-1 text-[15px] font-medium">{money(v as number)}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
     </section>
   );
 }
 
-function Legend({ sw, k, v }: { sw: string; k: string; v: number }) {
-  return (
-    <div>
-      <dt className="flex items-center gap-1.5 text-muted">
-        <span aria-hidden className={`inline-block size-2.5 ${sw}`} />
-        {k}
-      </dt>
-      <dd className="num mt-0.5 text-[14px] font-medium">{money(v)}</dd>
-    </div>
-  );
-}
-
-function TripStrip({ brief }: { brief: BriefT }) {
+function Trip({ brief }: { brief: BriefT }) {
   const { s } = useStore();
   return (
-    <section className="mt-8" aria-label="Trip">
-      <span className="eyebrow">The trip</span>
-      <ol className="mt-2 border-t border-rule">
-        {LEGS.map((leg) => {
-          const a = brief.actions.find((x) => x.event.thread === leg.thread);
-          const d = brief.decisions.find((x) => x.event.thread === leg.thread);
+    <section className="mt-12" aria-label="Trip">
+      <ol className="border-t border-rule">
+        {LEGS.map((t) => {
+          const a = brief.actions.find((x) => x.event.thread === t);
+          const d = brief.decisions.find((x) => x.event.thread === t);
           const ds = d ? s.decisions[d.event.id] : undefined;
-          let status: React.ReactNode = <Tag>Not started</Tag>;
+          let tag = <Tag>Not started</Tag>;
           let price: number | null = null;
           if (a) {
             const undone = s.undone[a.event.id] === "undone";
-            status = undone ? <Tag tone="bad">Cancelling</Tag> : <Tag tone="ok">Reserved</Tag>;
+            tag = undone ? <Tag tone="problem">Cancelling</Tag> : <Tag tone="ok">Reserved</Tag>;
             price = undone ? null : a.option.price_cad;
+          } else if (d && ds && ds.status !== "open") {
+            tag = ds.choice ? <Tag tone="pick">Your pick</Tag> : <Tag tone="problem">Declined</Tag>;
+            price = ds.price;
           } else if (d) {
-            if (ds && ds.status !== "open") {
-              status = ds.choice ? <Tag tone="ink">You picked</Tag> : <Tag tone="bad">Declined</Tag>;
-              price = ds.price;
-            } else {
-              status = (
-                <a href="#needs-you">
-                  <Tag tone="act">Needs you</Tag>
-                </a>
-              );
-            }
+            tag = <Tag tone="act">Needs you</Tag>;
           }
+          const [name, when] = (LEG_LABEL[t] ?? t).split(" · ");
           return (
-            <li key={leg.thread} className="flex items-center justify-between gap-3 border-b border-rule py-2">
+            <li key={t} className="flex items-center justify-between gap-4 border-b border-rule py-3.5">
               <div className="min-w-0">
-                <span className="text-[14px] font-medium">{leg.label}</span>
-                <span className="ml-2 text-[12px] text-muted">{leg.when}</span>
+                <span className="text-[15px] font-medium">{name}</span>
+                <span className="ml-3 text-[13px] text-muted">{when}</span>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
-                {price !== null && <span className="num text-[13px]">{money(price)}</span>}
-                {status}
+              <div className="flex shrink-0 items-center gap-3">
+                {price ? <span className="num text-[14px]">{money(price)}</span> : null}
+                {tag}
               </div>
             </li>
           );
@@ -265,7 +205,7 @@ function ActionRow({ a, brief, onAudit }: { a: ActionView; brief: BriefT; onAudi
   const state = s.undone[a.event.id];
   const o = a.option;
   const breach = !a.rule.withinPreauth;
-  const audit = brief.audit.claims.find((c) => c.event_id === a.event.id || a.corrections.some((r) => r.id === c.event_id));
+  const notes = brief.threadNotes[a.event.thread ?? ""] ?? [];
 
   const undo = () => {
     dispatch({ t: "undo", id: a.event.id, s: "undoing" });
@@ -278,76 +218,71 @@ function ActionRow({ a, brief, onAudit }: { a: ActionView; brief: BriefT; onAudi
   };
 
   return (
-    <article className={`border bg-card ${state === "undone" ? "border-rule opacity-70" : breach ? "border-bad" : "border-rule"}`}>
-      <div className="px-4 py-3">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className={`text-[15px] font-medium leading-snug ${state === "undone" ? "line-through decoration-muted" : ""}`}>{o.label}</h3>
-          <span className="num shrink-0 text-[15px] font-semibold">{money(o.price_cad)}</span>
+    <article className={`border-b border-rule py-6 ${state === "undone" ? "opacity-60" : ""}`}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="eyebrow">{(LEG_LABEL[a.event.thread ?? ""] ?? "").split(" · ")[0]}</div>
+          <h3 className={`mt-2 text-[17px] font-medium leading-snug ${state === "undone" ? "line-through decoration-muted" : ""}`}>{headline(a.event)}</h3>
         </div>
-        {a.corrections.map((c) => (
-          <p key={c.id} className="mt-1 text-[12.5px] text-bad">
-            Corrected {clock(c.ts)}: {money(o.history[0].price_cad)} → {money(o.price_cad)}. {c.title.split("—")[1]?.trim()}
-          </p>
-        ))}
-        <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-2">{a.event.detail}</p>
-
-        <div className="mt-2 flex flex-wrap items-center gap-1">
-          <Tag tone={a.rule.refundable ? "ok" : "bad"}>{a.rule.refundable ? "✓" : "✕"} Refundable</Tag>
-          <Tag tone={a.rule.cancelsAfterWake ? "ok" : "bad"}>{a.rule.cancelsAfterWake ? "✓" : "✕"} Cancel window past 8 AM</Tag>
-          <Tag tone={breach ? "bad" : "ok"}>
-            {breach ? "✕" : "✓"} Within {money(brief.spend.preauth)}
-          </Tag>
-          {audit && <AuditTag status={audit.status} onClick={() => onAudit(audit.event_id)} />}
-          {o.flags.filter((f) => f.level !== "info").map((f) => <FlagTag key={f.text} f={f} />)}
-        </div>
+        <span className="num shrink-0 pt-6 text-[17px] font-semibold">{money(o.price_cad)}</span>
       </div>
 
-      <footer className="flex items-center justify-between gap-3 border-t border-rule px-4 py-2.5 text-[12.5px]">
+      {a.corrections.map((c) => (
+        <button key={c.id} type="button" onClick={() => onAudit(c.id)} className="mt-2 block text-left text-[13.5px] text-bad hover:underline">
+          Corrected from {money(o.history[0].price_cad)}: {c.summary ?? c.title}
+        </button>
+      ))}
+      {breach && !a.corrections.length && <p className="mt-2 text-[13.5px] text-bad">Over your {money(brief.spend.preauth)} overnight limit.</p>}
+      <NoteLines notes={notes} onAudit={onAudit} />
+
+      <div className="mt-4 flex items-center justify-between gap-4 text-[13.5px]">
         {state === "undone" ? (
           <>
-            <span className="text-bad">Cancellation in your reply to Muse</span>
-            <button type="button" onClick={keep} className="underline underline-offset-2">Keep it instead</button>
+            <span className="text-bad">Cancellation in your reply</span>
+            <button type="button" onClick={keep} className="text-muted underline decoration-rule underline-offset-4 hover:text-ink">
+              Keep it
+            </button>
           </>
         ) : state === "undoing" ? (
           <span className="working">Adding cancellation…</span>
         ) : (
           <>
             <span className="text-muted">
-              {o.cancel_by ? (
-                <>
-                  Free to cancel for <span className="num text-ink">{until(o.cancel_by, now)}</span>
-                </>
-              ) : (
-                "Can't be cancelled"
-              )}
-              {a.alternatives.length > 0 && (
-                <>
-                  {" · "}
-                  <button type="button" className="underline underline-offset-2" onClick={() => setOpen(!open)}>
-                    {open ? "hide" : `${a.alternatives.length} other option${a.alternatives.length > 1 ? "s" : ""}`}
-                  </button>
-                </>
-              )}
+              {o.cancel_by ? <>Free to cancel for <span className="num text-ink">{until(o.cancel_by, now)}</span></> : "Can't be cancelled"}
+              <span className="mx-2">·</span>
+              <button type="button" className="underline decoration-rule underline-offset-4 hover:text-ink" onClick={() => setOpen(!open)}>
+                {open ? "Less" : "Details"}
+              </button>
             </span>
             {o.cancel_by && (
-              <Btn kind="secondary" className="!px-2.5 !py-1 !text-[12.5px]" onClick={undo}>
+              <Btn kind="secondary" className="!px-3.5 !py-1.5 !text-[13.5px]" onClick={undo}>
                 Undo
               </Btn>
             )}
           </>
         )}
-      </footer>
+      </div>
+
       {open && (
-        <ul className="border-t border-rule bg-paper px-4 py-1">
-          {a.alternatives.map((x) => (
-            <li key={x.label} className="flex justify-between gap-3 py-1.5 text-[13px]">
-              <span className="text-ink-2">{x.label}</span>
-              <span className="num shrink-0">
-                {money(x.price_cad)} <span className="text-muted">({money(x.price_cad - o.price_cad, { sign: true })})</span>
-              </span>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-5 border-l border-rule-strong pl-4">
+          <OptionBody o={o} onAudit={() => onAudit(a.event.id)} />
+          {a.event.summary && <p className="mt-4 text-[14px] leading-relaxed text-ink-2">{a.event.summary}</p>}
+          <div className="mt-4 flex flex-wrap gap-1.5">
+            <Tag tone={a.rule.refundable ? "status" : "problem"}>{a.rule.refundable ? "Refundable" : "Not refundable"}</Tag>
+            <Tag tone={a.rule.cancelsAfterWake ? "status" : "problem"}>{a.rule.cancelsAfterWake ? "Undo window past 8 AM" : "Undo window closes overnight"}</Tag>
+            <Tag tone={breach ? "problem" : "status"}>{breach ? `Over ${money(brief.spend.preauth)}` : `Within ${money(brief.spend.preauth)}`}</Tag>
+          </div>
+          {a.alternatives.length > 0 && (
+            <ul className="mt-4 space-y-1.5 text-[13.5px]">
+              {a.alternatives.map((x) => (
+                <li key={x.label} className="flex justify-between gap-4 text-ink-2">
+                  <span>{x.label}</span>
+                  <span className="num shrink-0 text-muted">{money(x.price_cad - o.price_cad, { sign: true })}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
     </article>
   );
@@ -355,42 +290,47 @@ function ActionRow({ a, brief, onAudit }: { a: ActionView; brief: BriefT; onAudi
 
 function AssumptionRow({ e }: { e: LogEvent }) {
   const { s, dispatch, queue } = useStore();
+  const [open, setOpen] = useState(false);
   const cur = s.assumptions[e.id];
   const pick = (choice: string | null) => {
     dispatch({ t: "assume", id: e.id, choice });
-    queue(`assume:${e.id}`, choice ? `You assumed "${e.title}". Actually: ${choice}. Redo anything this affects and tell me what changes.` : null);
+    queue(`assume:${e.id}`, choice ? `You assumed "${headline(e)}". Actually: ${choice}. Redo anything this affects and tell me what changes.` : null);
   };
+  const chip = (active: boolean) =>
+    `border px-3 py-1.5 text-[13.5px] ${active ? "border-ink bg-ink text-paper" : "border-rule text-ink-2 hover:border-ink"}`;
   return (
-    <div className="border-b border-rule py-3">
-      <div className="flex items-start justify-between gap-3">
-        <h3 className={`text-[14.5px] font-medium leading-snug ${cur?.choice ? "text-muted line-through" : ""}`}>{e.title}</h3>
-        {e.confidence && <span className="shrink-0 text-[11px] text-muted">{e.confidence === "low" ? "a guess" : e.confidence === "med" ? "likely" : "confident"}</span>}
+    <div className="border-b border-rule py-6">
+      <div className="flex items-start justify-between gap-4">
+        <h3 className={`text-[17px] font-medium leading-snug ${cur?.choice ? "text-muted line-through decoration-muted" : ""}`}>{headline(e)}</h3>
+        <button type="button" onClick={() => setOpen(!open)} className="shrink-0 text-[13px] text-muted underline decoration-rule underline-offset-4 hover:text-ink">
+          {open ? "Hide" : "Why"}
+        </button>
       </div>
-      <p className="mt-0.5 text-[13px] leading-relaxed text-ink-2">{e.detail}</p>
-      {cur?.choice && (
-        <p className="mt-1 text-[13px] font-medium">
-          → {cur.choice} <span className="font-normal text-muted">· Muse will redo what this affects</span>
-        </p>
-      )}
-      <div className="mt-2 flex flex-wrap gap-1.5">
-        <button
-          type="button"
-          onClick={() => pick(null)}
-          className={`border px-2 py-1 text-[12.5px] ${!cur?.choice ? "border-ink bg-ink text-paper" : "border-rule text-ink-2 hover:border-ink"}`}
-        >
-          That&apos;s right
+      {cur?.choice && <p className="mt-1.5 text-[15px] font-medium">{cur.choice}</p>}
+      {open && <p className="mt-2 text-[14px] leading-relaxed text-ink-2">{e.summary ?? e.detail}</p>}
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button type="button" onClick={() => pick(null)} className={chip(!cur?.choice)}>
+          Right
         </button>
         {(e.alternatives ?? []).map((alt) => (
-          <button
-            key={alt}
-            type="button"
-            onClick={() => pick(alt)}
-            className={`border px-2 py-1 text-[12.5px] ${cur?.choice === alt ? "border-ink bg-ink text-paper" : "border-rule text-ink-2 hover:border-ink"}`}
-          >
+          <button key={alt} type="button" onClick={() => pick(alt)} className={chip(cur?.choice === alt)}>
             {alt}
           </button>
         ))}
       </div>
     </div>
+  );
+}
+
+function UpdateRow({ e }: { e: LogEvent }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <button type="button" onClick={() => setOpen(!open)} className="block w-full border-b border-rule py-4 text-left">
+      <div className="flex items-baseline justify-between gap-4">
+        <span className="text-[15.5px] leading-snug">{headline(e)}</span>
+        <span className="num shrink-0 text-[13px] text-muted">{clock(e.ts)}</span>
+      </div>
+      {open && <p className="mt-2 text-[14px] leading-relaxed text-ink-2">{e.summary ?? e.detail}</p>}
+    </button>
   );
 }
