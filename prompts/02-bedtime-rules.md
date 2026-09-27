@@ -1,4 +1,4 @@
-# 02 — Bedtime rules (send to BOTH sessions right before 03)
+# 02 — Bedtime rules (send to Muse right before 03)
 
 These are your standing rules for tonight. They override anything else.
 

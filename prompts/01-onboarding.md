@@ -1,4 +1,4 @@
-# 01 — Onboarding (send to BOTH Muse sessions now)
+# 01 — Onboarding (send to Muse now — already done)
 
 Hey — I want you to get to know me before I give you a real task tonight.
 
