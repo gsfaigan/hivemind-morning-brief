@@ -11,14 +11,14 @@ type Tone = "problem" | "tradeoff" | "status" | "pick" | "ok" | "act";
 const toneCls: Record<Tone, string> = {
   problem: "bg-bad-bg text-bad",
   tradeoff: "bg-warn-bg text-warn",
-  status: "border border-rule text-ink-2",
-  pick: "bg-ink text-paper",
+  status: "bg-fill text-ink-2",
+  pick: "bg-ink text-card",
   ok: "bg-ok-bg text-ok",
   act: "bg-act-bg text-act",
 };
 
 export function Tag({ tone = "status", children, onClick }: { tone?: Tone; children: React.ReactNode; onClick?: () => void }) {
-  const cls = `inline-flex items-center px-2 py-[3px] text-[12px] font-medium leading-4 whitespace-nowrap ${toneCls[tone]}`;
+  const cls = `inline-flex items-center px-2 py-[3px] text-[12px] font-semibold leading-4 whitespace-nowrap ${toneCls[tone]}`;
   if (onClick)
     return (
       <button type="button" onClick={onClick} className={`${cls} underline-offset-2 hover:underline`}>
@@ -67,17 +67,22 @@ export function Section({
   id?: string;
 }) {
   return (
-    <section id={id} className="mt-16 scroll-mt-6 sm:mt-24">
-      <div className="mb-5 flex items-baseline justify-between border-t border-rule-strong pt-3">
-        <h2 className="eyebrow !text-ink">
+    <section id={id} className="mt-20 scroll-mt-8 sm:mt-28">
+      <div className="mb-6 flex items-baseline justify-between gap-4">
+        <h2 className="text-[26px] font-semibold tracking-[-0.025em] sm:text-[30px]">
           {label}
-          {count !== undefined && <span className="num ml-2 text-muted">{count}</span>}
+          {count !== undefined && <span className="num ml-2.5 text-muted">{count}</span>}
         </h2>
-        {aside && <div className="text-[13px] text-muted">{aside}</div>}
+        {aside && <div className="text-[14px] text-muted">{aside}</div>}
       </div>
       {children}
     </section>
   );
+}
+
+// A white panel on the grey page, like an inset grouped list.
+export function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <div className={`bg-card ${className}`}>{children}</div>;
 }
 
 // Departure over arrival, like a boarding pass.
@@ -87,8 +92,8 @@ export function Route({ from, to, depart, arrive }: { from?: string; to?: string
     <div className="flex gap-3 text-[14px]">
       <div className="flex flex-col items-center py-[7px]" aria-hidden>
         <span className="size-[7px] bg-ink" />
-        <span className="my-1 w-px flex-1 bg-rule" />
-        <span className="size-[7px] border border-ink" />
+        <span className="my-1 w-[1.5px] flex-1 bg-rule" />
+        <span className="size-[7px] border-[1.5px] border-ink" />
       </div>
       <div className="space-y-1.5">
         <div>
@@ -104,8 +109,8 @@ export function Route({ from, to, depart, arrive }: { from?: string; to?: string
   );
 }
 
-export function Page({ children }: { children: React.ReactNode }) {
-  return <div className="mx-auto w-full max-w-[720px] px-5 pb-44 pt-8 sm:px-10 sm:pt-14">{children}</div>;
+export function Page({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <div className={`mx-auto w-full max-w-[760px] px-5 pb-44 sm:px-10 ${className}`}>{children}</div>;
 }
 
 export function Nav({ here, date }: { here: "brief" | "night" | "trust"; date: string }) {
@@ -115,18 +120,30 @@ export function Nav({ here, date }: { here: "brief" | "night" | "trust"; date: s
     { k: "trust", href: "/trust", label: "Trust" },
   ] as const;
   return (
-    <nav className="flex items-center justify-between text-[14px]">
-      <span className="eyebrow">{date}</span>
-      <div className="flex gap-5 sm:gap-7">
+    <nav className="flex h-12 items-center justify-between text-[13px]">
+      <span className="font-semibold text-ink">{date}</span>
+      <div className="flex gap-6 sm:gap-8">
         {items.map((i) =>
           i.k === here ? (
             <span key={i.k} className="text-ink">{i.label}</span>
           ) : (
-            <Link key={i.k} href={i.href} className="text-muted hover:text-ink">{i.label}</Link>
+            <Link key={i.k} href={i.href} className="text-muted transition-colors hover:text-ink">{i.label}</Link>
           ),
         )}
       </div>
     </nav>
+  );
+}
+
+// The dark band every page opens with.
+export function DarkHeader({ here, date, children }: { here: "brief" | "night" | "trust"; date: string; children: React.ReactNode }) {
+  return (
+    <header className="night">
+      <div className="mx-auto w-full max-w-[760px] px-5 sm:px-10">
+        <Nav here={here} date={date} />
+        <div className="pb-14 pt-16 sm:pb-20 sm:pt-24">{children}</div>
+      </div>
+    </header>
   );
 }
 
@@ -137,15 +154,15 @@ export function Btn({
   ...rest
 }: { kind?: "primary" | "secondary" | "ghost" | "act" } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const k = {
-    primary: "bg-ink text-paper hover:opacity-90",
-    act: "bg-act text-paper hover:opacity-90",
-    secondary: "border border-ink text-ink hover:bg-ink hover:text-paper",
-    ghost: "text-ink-2 underline underline-offset-4 decoration-rule hover:decoration-ink px-0",
+    primary: "bg-act text-white hover:brightness-110",
+    act: "bg-act text-white hover:brightness-110",
+    secondary: "bg-fill text-ink hover:brightness-95",
+    ghost: "text-act hover:underline underline-offset-4 !px-0",
   }[kind];
   return (
     <button
       type="button"
-      className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-[14.5px] font-medium transition-colors disabled:opacity-40 disabled:pointer-events-none ${k} ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 px-5 py-2.5 text-[15px] font-medium transition active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none ${k} ${className}`}
       {...rest}
     >
       {children}
@@ -167,12 +184,12 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-label={title}>
-      <button type="button" aria-label="Close" className="absolute inset-0 bg-ink/40" onClick={onClose} />
-      <div className="relative max-h-[85dvh] w-full max-w-[600px] overflow-y-auto border-t border-rule-strong bg-paper px-5 pb-10 pt-4 sm:border sm:px-8">
-        <div className="sticky top-0 -mx-5 mb-5 flex items-center justify-between border-b border-rule bg-paper px-5 pb-3 sm:-mx-8 sm:px-8">
-          <h3 className="text-[15px] font-semibold">{title}</h3>
-          <button type="button" onClick={onClose} className="px-2 py-1 text-[13px] text-muted hover:text-ink">
-            Close
+      <button type="button" aria-label="Close" className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="rise relative max-h-[88dvh] w-full max-w-[620px] overflow-y-auto bg-card px-6 pb-12 pt-5 shadow-[0_30px_80px_rgba(0,0,0,0.25)] sm:px-10">
+        <div className="sticky top-0 -mx-6 mb-6 flex items-center justify-between bg-card px-6 pb-3 pt-1 sm:-mx-10 sm:px-10">
+          <h3 className="text-[22px] font-semibold tracking-[-0.02em]">{title}</h3>
+          <button type="button" onClick={onClose} className="py-1 text-[15px] font-medium text-act">
+            Done
           </button>
         </div>
         {children}

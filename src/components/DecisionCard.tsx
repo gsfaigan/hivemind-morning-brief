@@ -29,11 +29,11 @@ export function Why({ e }: { e: LogEvent }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="mt-3">
-      <button type="button" onClick={() => setOpen(!open)} className="text-[13px] text-muted underline decoration-rule underline-offset-4 hover:text-ink">
+      <button type="button" onClick={() => setOpen(!open)} className="text-[14px] text-act hover:underline">
         {open ? "Hide" : "Why"}
       </button>
       {open && (
-        <div className="mt-3 border-l border-rule-strong pl-4 text-[14px] leading-relaxed text-ink-2">
+        <div className="mt-3 bg-paper p-4 text-[14.5px] leading-relaxed text-ink-2">
           <p>{e.detail}</p>
           <p className="mt-1.5 text-[12.5px] text-muted">Muse, {clock(e.ts)}</p>
         </div>
@@ -64,7 +64,7 @@ export function OptionBody({ o, onAudit, status }: { o: OptionView; onAudit?: ()
   const x = o.facts ?? {};
   return (
     <>
-      <div className="text-[16px] font-medium leading-snug">{o.label.replace(/\s*\((?:with taxes|expired)\)$/i, "")}</div>
+      <div className="text-[17px] font-semibold leading-snug tracking-[-0.01em]">{o.label.replace(/\s*\((?:with taxes|expired)\)$/i, "")}</div>
       {o.sub && <div className="mt-0.5 text-[14px] text-muted">{o.sub}</div>}
       {(x.from || x.depart) && (
         <div className="mt-3">
@@ -149,15 +149,15 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
 
   if (st.status !== "open") {
     return (
-      <div className="border border-rule bg-card p-5 sm:px-7">
+      <div className="bg-card px-6 py-5 sm:px-8">
         <div className="eyebrow">{leg}</div>
-        <div className="mt-2 flex items-baseline justify-between gap-4">
-          <div className="text-[16px] font-medium">{st.choice ?? "None of these"}</div>
-          {st.price !== null && st.price > 0 && <div className="num text-[16px] font-medium">{money(st.price)}</div>}
+        <div className="mt-1 flex items-baseline justify-between gap-4">
+          <div className="text-[17px] font-semibold">{st.choice ?? "None of these"}</div>
+          {st.price !== null && st.price > 0 && <div className="num text-[17px] font-semibold">{money(st.price)}</div>}
         </div>
-        <div className="mt-2 flex items-center justify-between text-[13px] text-muted">
+        <div className="mt-2 flex items-center justify-between text-[14px] text-muted">
           <span>{st.status === "sending" ? <span className="working">Adding to your reply…</span> : "In your reply to Muse"}</span>
-          <button type="button" onClick={reopen} className="underline decoration-rule underline-offset-4 hover:text-ink">
+          <button type="button" onClick={reopen} className="text-act hover:underline">
             Change
           </button>
         </div>
@@ -166,14 +166,14 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
   }
 
   return (
-    <article className="border border-rule-strong bg-card">
-      <div className="p-5 sm:p-7">
+    <article className="rise bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+      <div className="px-6 pb-6 pt-7 sm:px-10 sm:pt-10">
         <div className="flex items-baseline justify-between gap-4">
-          <span className="eyebrow !text-act">{leg}</span>
-          {d.expires_at && <span className="num text-[13px] text-act">Hold ends in {until(d.expires_at, now)}</span>}
+          <span className="eyebrow">{leg}</span>
+          {d.expires_at && <span className="num text-[13px] font-semibold text-warn">Hold ends in {until(d.expires_at, now)}</span>}
         </div>
-        <h3 className="mt-3 text-[22px] font-semibold leading-tight tracking-[-0.015em] sm:text-[24px]">{headline(d.event)}</h3>
-        {d.event.summary && <p className="mt-2 text-[15.5px] leading-relaxed text-ink-2">{d.event.summary}</p>}
+        <h3 className="mt-3 text-[26px] font-semibold leading-[1.1] tracking-[-0.03em] sm:text-[34px]">{headline(d.event)}</h3>
+        {d.event.summary && <p className="mt-3 text-[17px] leading-relaxed text-ink-2">{d.event.summary}</p>}
         <NoteLines notes={notes} onAudit={onAudit} />
         <Why e={d.event} />
       </div>
@@ -187,14 +187,18 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
           const picked = sel === o.label;
           const isPick = o.label === d.recommended;
           return (
-            <label key={o.label} className={`block cursor-pointer border-t border-rule px-5 py-5 sm:px-7 ${picked ? "bg-paper" : ""}`}>
+            <label
+              key={o.label}
+              className={`relative block cursor-pointer border-t border-rule px-6 py-6 transition-colors sm:px-10 ${picked ? "bg-act-bg/40" : "hover:bg-paper/50"}`}
+            >
+              {picked && <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-act" />}
               <div className="flex items-start gap-4">
                 <input
                   type="radio"
                   name={d.event.id}
                   checked={picked}
                   onChange={() => setSel(o.label)}
-                  className="mt-1 size-4 shrink-0 accent-[var(--ink)]"
+                  className="mt-1 size-[18px] shrink-0 accent-[var(--act)]"
                 />
                 <div className="min-w-0 flex-1">
                   <OptionBody
@@ -219,7 +223,7 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
                   )}
                 </div>
                 <div className="num shrink-0 text-right">
-                  <div className="text-[17px] font-semibold">{money(o.price_cad)}</div>
+                  <div className="text-[20px] font-semibold tracking-[-0.02em]">{money(o.price_cad)}</div>
                   {!isPick && <div className={`mt-0.5 text-[13px] ${delta > 0 ? "text-muted" : "text-ok"}`}>{money(delta, { sign: true })}</div>}
                 </div>
               </div>
@@ -237,8 +241,8 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
       )}
 
       {redirecting ? (
-        <div className="border-t border-rule p-5 sm:p-7">
-          <label htmlFor={`r-${d.event.id}`} className="text-[14px] font-medium">
+        <div className="border-t border-rule px-6 py-6 sm:px-10">
+          <label htmlFor={`r-${d.event.id}`} className="text-[15px] font-semibold">
             What do you want instead?
           </label>
           <textarea
@@ -247,11 +251,11 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
             onChange={(e) => setText(e.target.value)}
             rows={2}
             autoFocus
-            className="mt-3 w-full resize-none border border-rule bg-paper px-3.5 py-3 text-[15.5px] outline-none focus:border-ink"
+            className="mt-3 w-full resize-none bg-paper px-4 py-3.5 text-[16px] outline-none ring-act focus:ring-2"
           />
           <div className="mt-3 flex flex-wrap gap-2">
             {(REDIRECT_CHIPS[thread] ?? ["Cheaper", "More comfortable"]).map((c) => (
-              <button key={c} type="button" onClick={() => setText(c)} className="border border-rule px-2.5 py-1.5 text-[13px] text-ink-2 hover:border-ink">
+              <button key={c} type="button" onClick={() => setText(c)} className="bg-fill px-3 py-1.5 text-[13.5px] text-ink-2 hover:text-ink">
                 {c}
               </button>
             ))}
@@ -266,7 +270,7 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
           </div>
         </div>
       ) : (
-        <footer className="flex flex-wrap items-center gap-3 border-t border-rule p-5 sm:px-7">
+        <footer className="flex flex-wrap items-center gap-3 border-t border-rule px-6 py-6 sm:px-10">
           <Btn
             kind="act"
             onClick={() => {
@@ -315,7 +319,7 @@ function ReplanPanel({
   if (r.status === "thinking") {
     const stage = [...STAGES].reverse().find(([t]) => el >= t)![1];
     return (
-      <div className="border-t border-rule bg-paper p-5 sm:px-7">
+      <div className="border-t border-rule bg-paper px-6 py-6 sm:px-10">
         <div className="text-[13px] text-muted">&ldquo;{r.text}&rdquo;</div>
         <div className="mt-3 flex items-center gap-3 text-[15px]">
           <span className="working inline-block size-2 bg-act" aria-hidden />
@@ -328,7 +332,7 @@ function ReplanPanel({
 
   if (r.status === "error") {
     return (
-      <div className="border-t border-rule bg-bad-bg p-5 text-[14px] text-bad sm:px-7">
+      <div className="border-t border-rule bg-bad-bg px-6 py-5 text-[14px] text-bad sm:px-10">
         Couldn&apos;t re-plan. Muse&apos;s options above still stand.{" "}
         <button type="button" className="underline" onClick={onDismiss}>
           Dismiss
@@ -339,14 +343,14 @@ function ReplanPanel({
 
   const res = r.result;
   return (
-    <div className="border-t-2 border-ink bg-paper p-5 sm:p-7">
+    <div className="border-t border-rule bg-paper px-6 py-6 sm:px-10">
       <div className="flex items-baseline justify-between gap-4">
         <span className="text-[13px] text-muted">&ldquo;{r.text}&rdquo;</span>
-        <button type="button" onClick={onDismiss} className="text-[13px] text-muted underline decoration-rule underline-offset-4">
+        <button type="button" onClick={onDismiss} className="text-[14px] text-act hover:underline">
           Discard
         </button>
       </div>
-      <p className="mt-3 text-[16px] font-medium leading-snug">{res.summary}</p>
+      <p className="mt-3 text-[19px] font-semibold leading-snug tracking-[-0.015em]">{res.summary}</p>
       {res.tradeoff && <p className="mt-1.5 text-[14px] text-ink-2">{res.tradeoff}</p>}
       <ul className="mt-4">
         {res.options.map((o) => (

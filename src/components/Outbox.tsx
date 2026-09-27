@@ -40,35 +40,34 @@ export function Outbox({ brief }: { brief: Brief }) {
 
   return (
     <>
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-rule-strong bg-paper">
-        <div className="mx-auto flex max-w-[720px] items-center justify-between gap-4 px-5 py-4 sm:px-10">
-          <div className="min-w-0 text-[13.5px] leading-tight">
+      {/* Floats above the page, dark in both themes, like a system tray. */}
+      <div className="fixed inset-x-0 bottom-4 z-40 px-4 sm:bottom-6">
+        <div className="night rise mx-auto flex max-w-[560px] items-center justify-between gap-4 py-3 pl-5 pr-3 shadow-[0_12px_40px_rgba(0,0,0,0.28)]">
+          <div className="min-w-0 leading-tight">
             {s.sentAt ? (
               <>
-                <div className="font-medium">Sent to Muse</div>
-                <div className="text-[12px] text-muted">
-                  {ago(new Date(sentAtDemo!).toISOString(), now)}. Waiting for Muse to confirm.
-                </div>
+                <div className="text-[15px] font-semibold">Sent to Muse</div>
+                <div className="mt-0.5 text-[13px] text-muted">{ago(new Date(sentAtDemo!).toISOString(), now)}. Waiting to confirm.</div>
               </>
             ) : (
               <>
-                <div className="font-medium">Your reply to Muse</div>
-                <div className="text-[12.5px] text-muted">
-                  {n} change{n === 1 ? "" : "s"}, not sent yet
+                <div className="text-[15px] font-semibold">
+                  <span className="num">{n}</span> change{n === 1 ? "" : "s"} for Muse
                 </div>
+                <div className="mt-0.5 text-[13px] text-muted">Nothing is sent yet</div>
               </>
             )}
           </div>
-          <Btn kind={s.sentAt ? "secondary" : "primary"} onClick={() => setOpen(true)}>
-            {s.sentAt ? "View" : "Review & send"}
+          <Btn kind="primary" onClick={() => setOpen(true)}>
+            {s.sentAt ? "View" : "Review"}
           </Btn>
         </div>
       </div>
 
       <Sheet open={open} onClose={() => setOpen(false)} title="Your reply to Muse">
-        <p className="text-[14px] leading-relaxed text-ink-2">Everything you changed, as one message.</p>
-        <pre className="mt-4 whitespace-pre-wrap border border-rule bg-card p-3 font-sans text-[14px] leading-relaxed">{message}</pre>
-        <div className="mt-3 flex items-center gap-2">
+        <p className="text-[15px] leading-relaxed text-ink-2">Everything you changed, as one message.</p>
+        <pre className="mt-5 whitespace-pre-wrap bg-paper p-5 font-sans text-[15px] leading-relaxed">{message}</pre>
+        <div className="mt-6 flex items-center gap-5">
           <Btn kind="primary" onClick={send}>
             {copied ? "Copied. Paste in Muse" : "Copy & open Muse"}
           </Btn>

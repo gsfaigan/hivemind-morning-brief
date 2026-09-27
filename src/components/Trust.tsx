@@ -8,7 +8,7 @@ import { day, money } from "@/lib/format";
 import { useProposals } from "@/lib/learn";
 import { useStore } from "@/lib/store";
 import { Outbox } from "./Outbox";
-import { Btn, Nav, Page, Section, Tag } from "./ui";
+import { Btn, DarkHeader, Page, Panel, Section, Tag } from "./ui";
 
 export function Trust({ brief }: { brief: Brief }) {
   const { s, dispatch, queue } = useStore();
@@ -24,16 +24,21 @@ export function Trust({ brief }: { brief: Brief }) {
   };
 
   return (
-    <Page>
-      <Nav here="trust" date={day(brief.run.wake_at)} />
-
-      <header className="mt-12 sm:mt-16">
-        <h1 className="text-[36px] font-semibold leading-[1.05] tracking-[-0.025em] sm:text-[44px]">The line is reversibility.</h1>
-        <p className="mt-4 text-[18px] leading-snug text-ink-2 sm:text-[19px]">Muse acts alone only when you could undo it for free after you wake up.</p>
-      </header>
+    <>
+      <DarkHeader here="trust" date={day(brief.run.wake_at)}>
+        <h1 className="rise text-[44px] font-semibold leading-[1] tracking-[-0.04em] sm:text-[72px]">
+          The line is
+          <br />
+          reversibility.
+        </h1>
+        <p className="rise mt-5 text-[20px] leading-snug text-ink-2 [animation-delay:80ms] sm:text-[24px]">
+          Muse acts alone only when you could undo it, for free, after you wake up.
+        </p>
+      </DarkHeader>
+      <Page className="pt-4">
 
       <Section label="Tonight's rules">
-        <dl className="border-t border-rule">
+        <dl className="divide-y divide-rule bg-card px-6 sm:px-8">
           <Rule k="Alone" tone="ok" v={`Refundable bookings that stay cancellable past 8 AM, up to ${money(brief.spend.preauth)}. Holds. Seats.`} />
           <Rule k="Waits" tone="act" v={`Anything non-refundable, over ${money(brief.spend.preauth)}, or outside what you asked for.`} />
           <Rule k="Never" tone="problem" v="Wakes you up." />
@@ -45,7 +50,7 @@ export function Trust({ brief }: { brief: Brief }) {
 
       <Section label="Learned this morning" count={proposals.length}>
         {proposals.length === 0 ? (
-          <p className="border-t border-rule pt-5 text-[15px] leading-relaxed text-muted">
+          <p className="bg-card px-6 py-6 text-[15px] leading-relaxed text-muted sm:px-8">
             Go against a pick on the{" "}
             <Link href="/" className="underline decoration-rule underline-offset-4 hover:text-ink">
               brief
@@ -53,11 +58,11 @@ export function Trust({ brief }: { brief: Brief }) {
             and a rule shows up here. Nothing sticks until you accept it.
           </p>
         ) : (
-          <ul className="border-t border-rule">
+          <ul className="divide-y divide-rule bg-card">
             {proposals.map((p) => {
               const v = s.rules[p.id];
               return (
-                <li key={p.id} className="border-b border-rule py-6">
+                <li key={p.id} className="px-6 py-6 sm:px-8">
                   <p className="text-[17px] font-medium leading-snug">{p.rule}</p>
                   <p className="mt-1.5 text-[13.5px] text-muted">{p.because}</p>
                   <div className="mt-4 flex items-center gap-3">
@@ -98,7 +103,7 @@ export function Trust({ brief }: { brief: Brief }) {
           Trust is earned per category and lost faster than it&apos;s gained. Irreversible spending never becomes automatic.
         </p>
 
-        <figure className="mt-10">
+        <figure className="mt-10 bg-card p-6 sm:p-8">
           <figcaption className="text-[13.5px] font-medium">Decisions Muse brought to you</figcaption>
           <div className="relative mt-6 flex h-40 items-end gap-[2px] border-b border-rule-strong" onMouseLeave={() => setHover(null)}>
             {trips.map((t, i) => {
@@ -114,7 +119,7 @@ export function Trust({ brief }: { brief: Brief }) {
                   aria-label={`Trip ${t.n}: asked ${t.asked} of ${total}`}
                 >
                   <div className="border border-b-0 border-rule" style={{ height: `${(t.auto / maxQ) * 100}%` }} />
-                  <div className={t.event ? "bg-act" : "bg-ink"} style={{ height: `${(t.asked / maxQ) * 100}%` }} />
+                  <div className={t.event ? "bg-bad" : "bg-ink"} style={{ height: `${(t.asked / maxQ) * 100}%` }} />
                 </div>
               );
             })}
@@ -127,7 +132,7 @@ export function Trust({ brief }: { brief: Brief }) {
                 <div className="num mt-1 text-ink-2">
                   Asked {trips[hover].asked} of {trips[hover].asked + trips[hover].auto} · limit {money(trips[hover].preauth)}
                 </div>
-                {trips[hover].event && <div className="mt-1.5 text-act">{trips[hover].event}</div>}
+                {trips[hover].event && <div className="mt-1.5 text-bad">{trips[hover].event}</div>}
               </div>
             )}
           </div>
@@ -141,14 +146,14 @@ export function Trust({ brief }: { brief: Brief }) {
           <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-[12.5px] text-muted">
             <span className="flex items-center gap-2"><span className="inline-block size-2.5 bg-ink" /> Asked you</span>
             <span className="flex items-center gap-2"><span className="inline-block size-2.5 border border-rule" /> Handled alone</span>
-            <span className="flex items-center gap-2"><span className="inline-block size-2.5 bg-act" /> Trust reset</span>
+            <span className="flex items-center gap-2"><span className="inline-block size-2.5 bg-bad" /> Trust reset</span>
           </div>
-          <p className="mt-6 border-l-2 border-act pl-4 text-[14px] leading-relaxed text-ink-2">Trip 6: {trips[5].event}</p>
+          <p className="mt-6 border-l-2 border-bad pl-4 text-[14px] leading-relaxed text-ink-2">Trip 6: {trips[5].event}</p>
         </figure>
 
-        <div className="mt-14 border-t border-rule">
+        <Panel className="mt-14 divide-y divide-rule">
           {history.categories.map((c) => (
-            <div key={c.name} className="grid gap-x-6 gap-y-1 border-b border-rule py-5 sm:grid-cols-[140px_1fr]">
+            <div key={c.name} className="grid gap-x-6 gap-y-1 px-6 py-5 sm:grid-cols-[150px_1fr] sm:px-8">
               <div className="text-[15px] font-medium">{c.name}</div>
               <div>
                 <div className="text-[15px]">{c.trip10}</div>
@@ -156,12 +161,12 @@ export function Trust({ brief }: { brief: Brief }) {
               </div>
             </div>
           ))}
-        </div>
+        </Panel>
 
-        <h3 className="eyebrow mt-14">Rules it picked up</h3>
-        <ol className="mt-4 border-t border-rule">
+        <h3 className="mt-14 text-[20px] font-semibold tracking-[-0.02em]">Rules it picked up</h3>
+        <ol className="mt-5 divide-y divide-rule bg-card">
           {history.learned.map((r) => (
-            <li key={r.rule} className="flex gap-5 border-b border-rule py-4 text-[15px]">
+            <li key={r.rule} className="flex gap-5 px-6 py-4 text-[15px] sm:px-8">
               <span className="num w-14 shrink-0 text-muted">Trip {r.trip}</span>
               <span>{r.rule}</span>
             </li>
@@ -170,14 +175,15 @@ export function Trust({ brief }: { brief: Brief }) {
         <p className="mt-6 text-[12.5px] text-muted">Only trip 1 is real. Trips 2 to 10 are simulated.</p>
       </Section>
 
+      </Page>
       <Outbox brief={brief} />
-    </Page>
+    </>
   );
 }
 
 function Rule({ k, v, tone }: { k: string; v: string; tone: "ok" | "act" | "problem" }) {
   return (
-    <div className="grid grid-cols-[72px_1fr] gap-4 border-b border-rule py-5">
+    <div className="grid grid-cols-[72px_1fr] gap-4 py-5">
       <dt>
         <Tag tone={tone}>{k}</Tag>
       </dt>

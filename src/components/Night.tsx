@@ -5,7 +5,7 @@ import type { Brief } from "@/lib/derive";
 import { clock, day, money, toCad } from "@/lib/format";
 import type { Kind } from "@/lib/types";
 import { AuditSheet } from "./AuditSheet";
-import { AuditTag, Glyph, Nav, Page } from "./ui";
+import { AuditTag, DarkHeader, Glyph, Page } from "./ui";
 
 const FILTERS: { k: Kind | "all"; label: string }[] = [
   { k: "all", label: "All" },
@@ -43,40 +43,38 @@ export function Night({ brief }: { brief: Brief }) {
   const shown = timeline.filter((e) => f === "all" || e.kind === f);
 
   return (
-    <Page>
-      <Nav here="night" date={day(run.wake_at)} />
+    <>
+      <DarkHeader here="night" date={day(run.wake_at)}>
+        <h1 className="rise text-[44px] font-semibold leading-[1] tracking-[-0.04em] sm:text-[72px]">Last night.</h1>
+        <p className="rise mt-5 text-[20px] leading-snug text-ink-2 [animation-delay:80ms] sm:text-[24px]">Everything {run.agent} logged, unedited.</p>
 
-      <header className="mt-12 sm:mt-16">
-        <h1 className="text-[36px] font-semibold leading-[1.05] tracking-[-0.025em] sm:text-[44px]">Last night</h1>
-        <p className="mt-4 text-[18px] leading-snug text-ink-2 sm:text-[19px]">
-          Everything {run.agent} logged, unedited. The brief is built from this.
-        </p>
-      </header>
+        {/* One tick per entry, midnight to wake-up. */}
+        <div className="mt-14 sm:mt-20" aria-hidden>
+          <div className="relative h-12">
+            {timeline.map((e) => {
+              const x = ((new Date(e.ts).getTime() - t0) / (t1 - t0)) * 100;
+              const tall = e.kind === "decision" || e.kind === "mistake" || e.kind === "would_book";
+              return <span key={e.id} className={`absolute bottom-0 w-[3px] ${DOT[e.kind]} ${tall ? "h-11" : "h-5"}`} style={{ left: `${x}%` }} />;
+            })}
+          </div>
+          <div className="h-px bg-rule" />
+          <div className="num mt-2 flex justify-between text-[12px] text-muted">
+            {["12 AM", "2", "4", "6", "8 AM"].map((h) => (
+              <span key={h}>{h}</span>
+            ))}
+          </div>
+          <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-muted">
+            {(["decision", "would_book", "mistake", "assumption", "update"] as Kind[]).map((k) => (
+              <span key={k} className="flex items-center gap-2">
+                <span className={`inline-block size-2.5 ${DOT[k]}`} /> {KIND_LABEL[k]}
+              </span>
+            ))}
+          </div>
+        </div>
+      </DarkHeader>
 
-      {/* The night at a glance: one tick per entry on a midnight-to-wake axis. */}
-      <div className="mt-14" aria-hidden>
-        <div className="relative h-12 border-b border-rule-strong">
-          {timeline.map((e) => {
-            const x = ((new Date(e.ts).getTime() - t0) / (t1 - t0)) * 100;
-            const tall = e.kind === "decision" || e.kind === "mistake" || e.kind === "would_book";
-            return <span key={e.id} className={`absolute bottom-0 w-[3px] ${DOT[e.kind]} ${tall ? "h-10" : "h-5"}`} style={{ left: `${x}%` }} title={e.title} />;
-          })}
-        </div>
-        <div className="num mt-1 flex justify-between text-[10.5px] text-muted">
-          {["12 AM", "2", "4", "6", "8 AM"].map((h) => (
-            <span key={h}>{h}</span>
-          ))}
-        </div>
-        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-[12.5px] text-muted">
-          {(["decision", "would_book", "mistake", "assumption", "update"] as Kind[]).map((k) => (
-            <span key={k} className="flex items-center gap-1">
-              <span className={`inline-block size-2 ${DOT[k]}`} /> {KIND_LABEL[k]}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-12 flex gap-2 overflow-x-auto pb-1" role="tablist">
+      <Page className="pt-10 sm:pt-14">
+      <div className="inline-flex max-w-full gap-0.5 overflow-x-auto bg-fill p-0.5" role="tablist">
         {FILTERS.map((x) => {
           const n = x.k === "all" ? timeline.length : timeline.filter((e) => e.kind === x.k).length;
           return (
@@ -86,7 +84,7 @@ export function Night({ brief }: { brief: Brief }) {
               role="tab"
               aria-selected={f === x.k}
               onClick={() => setF(x.k)}
-              className={`shrink-0 border px-3 py-1.5 text-[13.5px] ${f === x.k ? "border-ink bg-ink text-paper" : "border-rule text-ink-2 hover:border-ink"}`}
+              className={`shrink-0 px-3.5 py-1.5 text-[14px] transition-colors ${f === x.k ? "bg-card font-semibold text-ink shadow-[0_1px_3px_rgba(0,0,0,0.12)]" : "text-ink-2 hover:text-ink"}`}
             >
               {x.label} <span className="num opacity-60">{n}</span>
             </button>
@@ -94,7 +92,7 @@ export function Night({ brief }: { brief: Brief }) {
         })}
       </div>
 
-      <ol className="mt-8 border-l border-rule">
+      <ol className="mt-10 border-l border-rule">
         {shown.map((e) => {
           const claims = audit.claims.filter((c) => c.event_id === e.id);
           const worst = claims.find((c) => c.status !== "verified") ?? claims[0];
@@ -137,7 +135,8 @@ export function Night({ brief }: { brief: Brief }) {
           );
         })}
       </ol>
+      </Page>
       <AuditSheet brief={brief} eventId={auditFor} onClose={() => setAuditFor(null)} />
-    </Page>
+    </>
   );
 }
