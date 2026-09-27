@@ -92,8 +92,8 @@ body {
   --rule: rgba(255, 255, 255, 0.35);
   --act: #ffffff;
   --fill: rgba(0, 0, 0, 0.14);
-  --card: #c23216;
-  background: #d93a1b;
+  --card: #a32914;
+  background: #b82f18;
   color: var(--ink);
 }
 

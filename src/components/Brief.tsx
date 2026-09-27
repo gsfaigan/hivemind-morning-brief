@@ -59,7 +59,7 @@ export function Brief({ brief }: { brief: BriefT }) {
           </Panel>
         </Section>
 
-        <Section label="For your information" count={brief.updates.length}>
+        <Section label="FYI" count={brief.updates.length}>
           <Panel className="divide-y divide-rule">
             {brief.updates.map((e) => (
               <UpdateRow key={e.id} e={e} />

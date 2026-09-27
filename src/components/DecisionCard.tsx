@@ -168,11 +168,8 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
   return (
     <article className="rise bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       <div className="px-6 pb-6 pt-7 sm:px-10 sm:pt-10">
-        <div className="flex items-baseline justify-between gap-4">
-          <span className="eyebrow">{leg}</span>
-          {d.expires_at && <span className="num text-[13px] font-semibold text-warn">Hold ends in {until(d.expires_at, now)}</span>}
-        </div>
-        <h3 className="mt-3 text-[26px] font-semibold leading-[1.1] tracking-[-0.03em] sm:text-[34px]">{headline(d.event)}</h3>
+        {d.expires_at && <div className="num mb-3 text-[13px] font-semibold text-warn">Hold ends in {until(d.expires_at, now)}</div>}
+        <h3 className="text-[26px] font-semibold leading-[1.1] tracking-[-0.03em] sm:text-[34px]">{headline(d.event)}</h3>
         {d.event.summary && <p className="mt-3 text-[17px] leading-relaxed text-ink-2">{d.event.summary}</p>}
         <NoteLines notes={notes} onAudit={onAudit} />
         <Why e={d.event} />
