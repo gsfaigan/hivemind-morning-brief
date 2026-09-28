@@ -1,0 +1,369 @@
+[
+ {
+  "id": "m01",
+  "ts": "2026-09-27T20:44:00-04:00",
+  "kind": "assumption",
+  "thread": "plan",
+  "topic": "split",
+  "reading": "4 nights each city",
+  "title": "Assumed dates and NYC/Boston split",
+  "headline": "Four nights in New York, four in Boston",
+  "summary": "You didn't give a split, so Muse made it even.",
+  "detail": "Departing Saturday 2026-10-10, home by Sunday 2026-10-18 (verified via date check). Trip split assumed as 4 nights NYC (Oct 10-13) + 4 nights Boston (Oct 14-17) since user gave no split.",
+  "alternatives": [
+   "3 nights New York, 5 Boston"
+  ],
+  "confidence": "high",
+  "agent": "muse"
+ },
+ {
+  "id": "m02",
+  "ts": "2026-09-27T20:44:00-04:00",
+  "kind": "assumption",
+  "thread": "budget",
+  "topic": "budget",
+  "reading": "CAD, travel and beds",
+  "title": "Assumed $1,500 CAD = transport + lodging",
+  "headline": "The $1,500 is CAD and covers travel and beds",
+  "summary": "Food, activities and souvenirs aren't counted.",
+  "detail": "Assuming $1,500 CAD covers transport + lodging only (not food, activities, or souvenirs). Baggage and seat-selection costs that change prices will be flagged, per standing rule.",
+  "alternatives": [
+   "CAD, including food"
+  ],
+  "confidence": "high",
+  "agent": "muse"
+ },
+ {
+  "id": "m03",
+  "ts": "2026-09-27T20:44:00-04:00",
+  "kind": "assumption",
+  "thread": "plan",
+  "topic": "travellers",
+  "reading": "Travelling solo",
+  "title": "Assumed solo traveler",
+  "headline": "You're travelling solo",
+  "summary": "Per-person costs change if friends come.",
+  "detail": "Assuming 1 traveler (solo). If traveling with friends, per-person costs change and lodging math shifts. User can correct.",
+  "alternatives": [
+   "Travelling with friends"
+  ],
+  "confidence": "med",
+  "agent": "muse"
+ },
+ {
+  "id": "m04",
+  "ts": "2026-09-27T20:44:00-04:00",
+  "kind": "assumption",
+  "thread": "out",
+  "topic": "airports",
+  "reading": "Every airport, drive costs in",
+  "title": "Assumed airports and window-seat approach",
+  "headline": "Buffalo priced with gas, parking and tolls",
+  "summary": "So any Buffalo savings are real. Window seats noted as free or paid.",
+  "detail": "Comparing YYZ/YTZ/BUF airports; BUF drive costs (gas, parking ~8 days, tolls) folded into every comparison so savings are honest. 'Window seats where you can' = noting where window selection is free vs paid, flagging costs.",
+  "alternatives": [
+   "Toronto airports only"
+  ],
+  "confidence": "high",
+  "agent": "muse"
+ },
+ {
+  "id": "m05",
+  "ts": "2026-09-27T20:44:00-04:00",
+  "kind": "search",
+  "thread": "plan",
+  "title": "Reading-week trip research started",
+  "headline": "Started on flights, the bus and beds",
+  "detail": "Research plan: (1) cheapest one-way flights TOR->NYC Oct 10, (2) NYC->Boston ground transport Oct 14, (3) Boston->Toronto flights Oct 18, (4) budget lodging NYC + Boston for 8 nights. No purchases tonight per bedtime rules; findings logged, decisions for morning.",
+  "agent": "muse"
+ },
+ {
+  "id": "m06",
+  "ts": "2026-09-27T20:49:00-04:00",
+  "kind": "search",
+  "thread": "flights",
+  "title": "Flight prices in: YYZ routing wins at $407 CAD total",
+  "headline": "Toronto airports beat Buffalo: $407 in flights",
+  "detail": "Google Flights (taxes+fees included for 1 adult, per its results page). Outbound Oct 10: YYZ->LGA Air Canada nonstop CA$257 (9:00pm-10:36pm, 1 free carry-on) beats YTZ->EWR Porter CA$279 (via Ottawa, carry-on extra) and BUF->EWR Frontier CA$298 (via Atlanta, 7h44m, carry-on extra). Return Oct 18: BOS->YYZ Air Canada nonstop CA$150 (6:00am-7:56am, carry-on extra) beats BOS->BUF JetBlue CA$262 (carry-on free). Buffalo routing = CA$560 flights + gas/parking/tolls (~$175-225 est) vs YYZ routing CA$407 total, no drive cost.",
+  "options": [
+   {
+    "label": "Air Canada AC724",
+    "price": 257,
+    "currency": "CAD",
+    "source_url": "Google Flights results screen (no direct link)",
+    "checked_at": "2026-09-27T20:58:00-04:00",
+    "refundable": null,
+    "facts": {
+     "key": "ac724",
+     "from": "Pearson",
+     "to": "LaGuardia",
+     "depart": "21:00",
+     "arrive": "22:36"
+    }
+   },
+   {
+    "label": "Porter",
+    "price": 279,
+    "currency": "CAD",
+    "source_url": "Google Flights results screen (no direct link)",
+    "checked_at": "2026-09-27T20:53:00-04:00",
+    "refundable": null,
+    "note": "via Ottawa, carry-on extra",
+    "facts": {
+     "key": "porter-ytz-ewr",
+     "from": "Billy Bishop",
+     "to": "Newark",
+     "depart": "11:55",
+     "arrive": "15:45"
+    }
+   },
+   {
+    "label": "Frontier",
+    "price": 298,
+    "currency": "CAD",
+    "source_url": "Google Flights results screen (no direct link)",
+    "checked_at": "2026-09-27T20:47:00-04:00",
+    "refundable": null,
+    "note": "via Atlanta, carry-on extra",
+    "facts": {
+     "key": "frontier-buf",
+     "from": "Buffalo",
+     "to": "Newark",
+     "depart": "13:44",
+     "arrive": "21:28"
+    }
+   },
+   {
+    "label": "Air Canada AC767",
+    "price": 150,
+    "currency": "CAD",
+    "source_url": "Google Flights results screen (no direct link)",
+    "checked_at": "2026-09-27T20:57:00-04:00",
+    "refundable": null,
+    "note": "carry-on extra",
+    "facts": {
+     "key": "ac767",
+     "from": "Boston Logan",
+     "to": "Pearson",
+     "depart": "06:00",
+     "arrive": "07:56"
+    }
+   },
+   {
+    "label": "JetBlue",
+    "price": 262,
+    "currency": "CAD",
+    "source_url": "Google Flights results screen (no direct link)",
+    "checked_at": "2026-09-27T20:55:00-04:00",
+    "refundable": null,
+    "note": "to Buffalo",
+    "facts": {
+     "key": "jetblue-bos-buf",
+     "from": "Boston Logan",
+     "to": "Buffalo",
+     "depart": "09:19",
+     "arrive": "10:48"
+    }
+   }
+  ],
+  "agent": "muse"
+ },
+ {
+  "id": "m07",
+  "ts": "2026-09-27T20:50:00-04:00",
+  "kind": "search",
+  "thread": "plan",
+  "title": "Price checks dispatched for flights + NYC-Boston bus",
+  "headline": "Checking exact flight and bus prices",
+  "detail": "Two browser checks running: exact one-way flight prices Oct 10 TOR->NYC and Oct 18 BOS->TOR incl. baggage and window-seat costs; cheapest NYC->Boston bus Oct 14. Hostel grounding so far: NYC dorm beds ~US$65-75/night, Boston HI ~US$89-92/night, taxes extra.",
+  "agent": "muse"
+ },
+ {
+  "id": "m08",
+  "ts": "2026-09-27T20:52:00-04:00",
+  "kind": "search",
+  "thread": "nyc-bos",
+  "title": "NYC->Boston bus: $33.98 Greyhound recommended",
+  "headline": "Greyhound from Port Authority is the pick",
+  "detail": "Cheapest NYC->Boston Oct 14: US$32.48 FlixBus but departs from Queens. Better pick: Greyhound US$33.98 Port Authority -> Boston South Station 9:40am-2:35pm, direct, only $1.50 more, far more convenient. Megabus $38.98 total.",
+  "agent": "muse"
+ },
+ {
+  "id": "m09",
+  "ts": "2026-09-27T20:53:00-04:00",
+  "kind": "search",
+  "thread": "plan",
+  "title": "All transport priced; exact lodging check running",
+  "headline": "All transport priced, checking hostels",
+  "detail": "Transport is now fully priced: YYZ->LGA $257 + BOS->YYZ $150 CAD + NYC->Boston bus ~US$33.98. Remaining gap: exact-date hostel prices for Oct 10-14 NYC and Oct 14-18 Boston.",
+  "agent": "muse"
+ },
+ {
+  "id": "m10",
+  "ts": "2026-09-27T21:12:00-04:00",
+  "kind": "update",
+  "thread": "nyc-stay",
+  "flag": true,
+  "title": "FX rate and hostel-tax ambiguity",
+  "headline": "Hostel prices may not include tax",
+  "summary": "HI's page doesn't say. About 15% tax would add roughly $140 and put the plan over budget.",
+  "detail": "Conversions used 1 USD = 1.4154 CAD (checked ~9:10 PM EDT Sept 27). Hostel prices are in USD as shown; HI USA booking page does NOT state whether taxes/fees are included — budget risk flagged.",
+  "agent": "muse"
+ },
+ {
+  "id": "m11",
+  "ts": "2026-09-27T21:15:00-04:00",
+  "kind": "decision",
+  "thread": "flights",
+  "title": "Full reading-week plan: flights",
+  "headline": "Air Canada one-ways for $407",
+  "summary": "Muse's plan flies home at 6:00 AM. Nothing was verified refundable, so it booked nothing.",
+  "detail": "Full plan assembled: AC724 YYZ->LGA Oct 10 ($257 CAD, taxes in, 1 free carry-on) + AC767 BOS->YYZ Oct 18 ($150 CAD, taxes in, carry-on extra). Nothing verified refundable tonight, so per bedtime rules every booking is a DECISION for the morning (no WOULD_BOOK).",
+  "options": [
+   {
+    "label": "Air Canada one-ways",
+    "price": 407,
+    "currency": "CAD",
+    "source_url": "Google Flights results screen (no direct link)",
+    "checked_at": "2026-09-27T20:58:00-04:00",
+    "refundable": null,
+    "sub": "AC724 out Oct 10 · AC767 home Oct 18, 6:00 AM",
+    "facts": {
+     "key": "ac-oneways",
+     "from": "Pearson",
+     "to": "LaGuardia",
+     "depart": "21:00",
+     "arrive": "22:36"
+    }
+   }
+  ],
+  "recommended": "Air Canada one-ways",
+  "reversible": true,
+  "confidence": "high",
+  "agent": "muse"
+ },
+ {
+  "id": "m12",
+  "ts": "2026-09-27T21:15:00-04:00",
+  "kind": "decision",
+  "thread": "nyc-bos",
+  "title": "Full reading-week plan: bus",
+  "headline": "Greyhound on Oct 14, or FlixBus a day earlier",
+  "summary": "Muse picked Greyhound on Oct 14. Instinct picked FlixBus on Oct 13, because it plans one fewer night in New York.",
+  "detail": "Greyhound NYC->Boston Oct 14 (US$33.98, tax in, Port Authority 9:40am -> South Station 2:35pm). No reserved seating, so window seats are free first-come.",
+  "options": [
+   {
+    "label": "Greyhound, Oct 14",
+    "price": 33.98,
+    "currency": "USD",
+    "price_cad": 48.1,
+    "source_url": "shop.greyhound.com (booking results Oct 14)",
+    "checked_at": "2026-09-27T21:00:00-04:00",
+    "refundable": null,
+    "facts": {
+     "key": "greyhound-oct14",
+     "from": "Port Authority",
+     "to": "South Station",
+     "depart": "09:40",
+     "arrive": "14:35"
+    }
+   },
+   {
+    "label": "FlixBus from Queens, Oct 14",
+    "price": 32.48,
+    "currency": "USD",
+    "price_cad": 45.97,
+    "source_url": "flixbus.com (booking results Oct 14)",
+    "checked_at": "2026-09-27T20:52:00-04:00",
+    "refundable": null,
+    "facts": {
+     "key": "flix-queens-oct14",
+     "from": "Jamaica, Queens",
+     "to": "South Station",
+     "depart": "17:30",
+     "arrive": "22:10"
+    }
+   },
+   {
+    "label": "Megabus, Oct 14",
+    "price": 38.98,
+    "currency": "USD",
+    "price_cad": 55.17,
+    "source_url": "us.megabus.com (booking results Oct 14)",
+    "checked_at": "2026-09-27T20:47:00-04:00",
+    "refundable": null,
+    "facts": {
+     "key": "megabus-oct14",
+     "from": "Port Authority",
+     "to": "South Station",
+     "depart": "10:15",
+     "arrive": "15:10"
+    }
+   }
+  ],
+  "recommended": "Greyhound, Oct 14",
+  "reversible": true,
+  "confidence": "high",
+  "agent": "muse"
+ },
+ {
+  "id": "m13",
+  "ts": "2026-09-27T21:15:00-04:00",
+  "kind": "decision",
+  "thread": "nyc-stay",
+  "title": "Full reading-week plan: NYC hostel",
+  "headline": "HI New York City, four nights",
+  "summary": "Non-refundable rate. Flexible rates cost about $109 more across both hostels.",
+  "detail": "HI NYC hostel 4 nights US$367.20 (nonrefundable rate). Total plan ~$1,433 CAD vs $1,500 budget, fits IF hostel prices are tax-inclusive.",
+  "options": [
+   {
+    "label": "HI New York City, 10-bed",
+    "price": 367.2,
+    "currency": "USD",
+    "price_cad": 519.73,
+    "sub": "10-bed dorm · 4 nights, non-refundable",
+    "source_url": "bookings.hiusa.org (official HI USA booking engine)",
+    "checked_at": "2026-09-27T20:56:00-04:00",
+    "refundable": false,
+    "facts": {
+     "key": "hi-nyc-10bed-4n",
+     "nights": 4
+    }
+   }
+  ],
+  "recommended": "HI New York City, 10-bed",
+  "reversible": false,
+  "confidence": "high",
+  "agent": "muse"
+ },
+ {
+  "id": "m14",
+  "ts": "2026-09-27T21:15:00-04:00",
+  "kind": "decision",
+  "thread": "bos-stay",
+  "title": "Full reading-week plan: Boston hostel",
+  "headline": "HI Boston, four nights",
+  "summary": "Non-refundable. Friday and Saturday showed one bed left.",
+  "detail": "HI Boston hostel 4 nights US$324.00 (nonrefundable rate), Men's 6-bed dorm. Fri and Sat nights were flagged '1 LEFT!'.",
+  "options": [
+   {
+    "label": "HI Boston",
+    "price": 324,
+    "currency": "USD",
+    "price_cad": 458.59,
+    "sub": "Men's 6-bed dorm · 4 nights, non-refundable",
+    "source_url": "bookings.hiusa.org (official HI USA booking engine)",
+    "checked_at": "2026-09-27T21:07:00-04:00",
+    "refundable": false,
+    "facts": {
+     "key": "hi-boston-4n",
+     "nights": 4
+    }
+   }
+  ],
+  "recommended": "HI Boston",
+  "reversible": false,
+  "confidence": "high",
+  "agent": "muse"
+ }
+]

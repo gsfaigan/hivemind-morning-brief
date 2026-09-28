@@ -54,7 +54,7 @@ export function Night({ data }: { data: RawData }) {
     <>
       <DarkHeader here="night" date={day(run.wake_at)}>
         <h1 className="rise text-[44px] font-semibold leading-[1] tracking-[-0.04em] sm:text-[72px]">Last night.</h1>
-        <p className="rise mt-5 text-[20px] leading-snug text-ink-2 [animation-delay:80ms] sm:text-[24px]">Everything {run.agents.map((a) => a.name).join(" and ")} logged, unedited.</p>
+        <p className="rise mt-5 text-[20px] leading-snug text-ink-2 [animation-delay:80ms] sm:text-[24px]">Everything {run.agents.map((a) => a.name).join(" and ")} logged, in order.</p>
 
         {/* One tick per entry, midnight to wake-up. */}
         <div className="mt-14 sm:mt-20" aria-hidden>

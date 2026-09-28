@@ -278,7 +278,7 @@ function useLegs(brief: BriefT) {
   };
 }
 
-function LegLabel({ st }: { st: LegState }) {
+function LegLabel({ st, same }: { st: LegState; same?: boolean }) {
   if (st.kind === "needs")
     return (
       <a href="#needs-you" className="font-semibold text-act hover:underline">
@@ -290,6 +290,7 @@ function LegLabel({ st }: { st: LegState }) {
   if (st.kind === "declined") return <span className="text-bad">Declined</span>;
   if (st.kind === "none")
     return <span className="text-muted">Not started</span>;
+  if (same) return <span className="text-muted">Same booking</span>;
   return <span className="num text-ink-2">{money(st.price ?? 0)}</span>;
 }
 
@@ -354,7 +355,13 @@ function TripCard({ brief }: { brief: BriefT }) {
       align: "right-0 text-right",
     },
   ];
-  const segs = [leg("out"), leg("nyc-bos"), leg("return")];
+  // A round-trip booking covers both flight segments.
+  const flightLeg = (t: string) => {
+    const own = leg(t);
+    return own.kind === "none" ? leg("flights") : own;
+  };
+  const segs = [flightLeg("out"), leg("nyc-bos"), flightLeg("return")];
+  const sharedFlights = leg("out").kind === "none" && leg("return").kind === "none" && leg("flights").kind !== "none";
 
   return (
     <Panel className="p-6 sm:p-10">
@@ -444,7 +451,7 @@ function TripCard({ brief }: { brief: BriefT }) {
                 <div className="relative mx-1 flex-1">
                   <div className={segCls(segs[i])} />
                   <div className="absolute bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap text-[13px]">
-                    <LegLabel st={segs[i]} />
+                    <LegLabel st={segs[i]} same={i === 2 && sharedFlights} />
                   </div>
                 </div>
               )}
@@ -470,7 +477,8 @@ function ActionRow({
   const state = s.undone[a.event.id];
   const o = a.option;
   const breach = !a.rule.withinPreauth;
-  const notes = brief.threadNotes[a.event.thread ?? ""] ?? [];
+  // Leg notes show on the open decision for that leg when there is one.
+  const notes = brief.decisions.some((d) => d.event.thread === a.event.thread) ? [] : (brief.threadNotes[a.event.thread ?? ""] ?? []);
   const multi = brief.run.agents.length > 1;
   const who = a.by.map(brief.agentName);
   const leg = (LEG_LABEL[a.event.thread ?? ""] ?? "").split(" · ")[0];

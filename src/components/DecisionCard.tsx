@@ -11,6 +11,8 @@ import { Btn, FlagTag, Route, Tag } from "./ui";
 import { Recheck } from "./Recheck";
 
 export const LEG_LABEL: Record<string, string> = {
+  flights: "Flights · Oct 10 and 18",
+  seats: "Seats",
   out: "Outbound · Sat Oct 10",
   "nyc-stay": "New York stay · Oct 10–14",
   "nyc-bos": "To Boston · Wed Oct 14",
@@ -49,8 +51,8 @@ export function NoteLines({ notes, onAudit, name }: { notes: LogEvent[]; onAudit
     <div className="mt-4 space-y-1.5">
       {notes.map((n) => (
         <button key={n.id} type="button" onClick={() => onAudit(n.id)} className="flex items-baseline gap-2.5 text-left text-[13.5px] hover:underline">
-          <span aria-hidden className={`inline-block size-1.5 shrink-0 -translate-y-0.5 ${n.kind === "mistake" ? "bg-bad" : "bg-warn"}`} />
-          <span className={n.kind === "mistake" ? "text-bad" : "text-ink-2"}>
+          <span aria-hidden className={`inline-block size-1.5 shrink-0 -translate-y-0.5 ${n.kind === "mistake" || n.flag ? "bg-bad" : "bg-warn"}`} />
+          <span className={n.kind === "mistake" || n.flag ? "text-bad" : "text-ink-2"}>
             {name ? `${name(n.agent)}: ` : n.kind === "mistake" ? "Fixed overnight: " : ""}
             {headline(n)}
           </span>
@@ -71,7 +73,7 @@ export function OptionBody({ o, onAudit, status }: { o: OptionView; onAudit?: ()
           <Route from={x.from} to={x.to} depart={x.depart} arrive={x.arrive} />
         </div>
       )}
-      {!x.from && x.nights && (
+      {!x.from && x.nights && !/night/i.test(o.sub ?? "") && (
         <div className="mt-0.5 text-[14px] text-muted">
           {x.nights} nights{x.commute_min && x.commute_min < 35 ? ` · ${x.commute_min} min to the sights` : ""}
         </div>
@@ -85,7 +87,7 @@ export function OptionBody({ o, onAudit, status }: { o: OptionView; onAudit?: ()
         </div>
       )}
       {o.disagreement && <p className="num mt-2 text-[13.5px] leading-snug text-bad">{o.disagreement}</p>}
-      {o.audit && (o.audit.status === "conflict" || o.audit.status === "unsourced") && (
+      {o.audit && (o.audit.status === "conflict" || o.audit.status === "unsourced" || o.audit.status === "stale") && (
         <p className="mt-2 text-[13.5px] leading-snug text-bad">{o.audit.note}</p>
       )}
     </>
@@ -197,7 +199,7 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
         <legend className="sr-only">Options</legend>
         {d.options.map((o) => {
           const delta = o.price_cad - recPrice;
-          const total = live.totalIf(d.event.id, o.price_cad);
+          const total = live.totalIf(d.event.id, o.price_cad, o.label);
           const over = total - live.budget;
           const picked = sel === o.label;
           const isPick = o.label === d.recommended;

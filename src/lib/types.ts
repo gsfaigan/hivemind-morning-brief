@@ -68,6 +68,7 @@ export interface LogEvent {
   topic?: string; // for assumptions: what it's about, shared across agents ("budget")
   reading?: string; // for assumptions: the agent's reading, short ("CAD, travel and beds")
   lost_savings_cad?: number; // for things the agent deliberately let lapse
+  flag?: boolean; // something the user should see on this leg (e.g. the agent entered personal details)
   corrects?: string; // id of an earlier event this one fixes (replaces its prices)
   updates?: string; // id of an open decision this one adds/refreshes options on
   agent: string;

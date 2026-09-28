@@ -1,0 +1,48 @@
+{
+ "generated_at": "2026-09-28T07:58:00-04:00",
+ "model": "Cross-check of both agents' logs",
+ "claims": [
+  {
+   "event_id": "m11",
+   "option_label": "Air Canada one-ways",
+   "claim": "$407 for both one-ways",
+   "status": "conflict",
+   "observed": "$277 one-way outbound",
+   "checked_at": "2026-09-28T07:58:00-04:00",
+   "note": "Instinct priced the same AC724 at $277 one-way, not $257."
+  },
+  {
+   "event_id": "m13",
+   "option_label": "HI New York City, 10-bed",
+   "claim": "$519.73 for 4 nights",
+   "status": "stale",
+   "checked_at": "2026-09-28T07:58:00-04:00",
+   "note": "Instinct saw every HI 10-bed dorm sell out by 3 AM."
+  },
+  {
+   "event_id": "m14",
+   "option_label": "HI Boston",
+   "claim": "$458.59 for 4 nights",
+   "status": "stale",
+   "checked_at": "2026-09-28T07:58:00-04:00",
+   "note": "Instinct saw HI Boston sell out at 11 PM."
+  },
+  {
+   "event_id": "i27",
+   "option_label": "Air Canada round trip",
+   "claim": "$412 held, 24h free cancel",
+   "status": "verified",
+   "checked_at": "2026-09-28T07:58:00-04:00",
+   "note": "Same flights still offered at 7:49 AM, now $508 to book fresh."
+  },
+  {
+   "event_id": "i25",
+   "option_label": "Backpackers, 24-bed",
+   "claim": "$508.66, free cancel",
+   "status": "verified",
+   "checked_at": "2026-09-28T07:58:00-04:00",
+   "note": "Unchanged at the 7:49 AM re-check."
+  }
+ ],
+ "interrogations": []
+}

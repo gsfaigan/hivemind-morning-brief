@@ -47,6 +47,7 @@ async function gemini(prompt, { search = false, quality = false } = {}) {
           ...(search ? { tools: [{ google_search: {} }] } : {}),
           generationConfig: { temperature: 0.1, ...(search ? {} : { responseMimeType: "application/json" }) },
         }),
+        signal: AbortSignal.timeout(120000),
       }).catch((e) => ({ ok: false, status: 0, text: async () => String(e) }));
       if (res.ok) {
         const d = await res.json();

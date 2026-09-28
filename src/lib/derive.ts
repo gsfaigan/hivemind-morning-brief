@@ -109,6 +109,7 @@ function optionFlags(o: OptionView): Flag[] {
   if (o.audit?.status === "conflict") f.push({ kind: "problem", text: "Conflict" });
   else if (o.audit?.status === "unsourced") f.push({ kind: "problem", text: "Unverified" });
   else if (!o.source_url) f.push({ kind: "problem", text: "No source" });
+  if (o.audit?.status === "stale") f.push({ kind: "problem", text: "Out of date" });
   if (o.disagreement && o.audit?.status !== "conflict") f.push({ kind: "problem", text: "Agents disagree" });
   if (x.layover_min && x.layover_min >= 240) f.push({ kind: "tradeoff", text: `${minutes(x.layover_min)} layover${x.via ? ` in ${x.via}` : ""}` });
   if (x.depart && x.depart < "07:00") f.push({ kind: "tradeoff", text: `Early start, ${ampm(x.depart)}` });
@@ -195,7 +196,8 @@ export function derive(runIn: Run, log: LogEvent[], audit: Audit): Brief {
   // Decisions: one per leg, whichever agents raised it.
   const decisions: DecisionView[] = [];
   for (const [, group] of byThread(events.filter((e) => e.kind === "decision"))) {
-    const root = group[0];
+    // The latest entry leads: it was written knowing the most (sellouts, price jumps).
+    const root = group[group.length - 1];
     const related = group.flatMap((g) => [g, ...relatedTo(g)]).filter((e) => e !== root);
     const options = merge([root, ...related]);
     const picks: Record<string, string> = {};
@@ -280,7 +282,10 @@ export function derive(runIn: Run, log: LogEvent[], audit: Audit): Brief {
       },
     });
   }
-  decisions.sort((a, b) => a.event.ts.localeCompare(b.event.ts));
+  // In trip order, so the brief reads like the trip.
+  const LEG_ORDER = ["flights", "out", "nyc-stay", "nyc-bos", "bos-stay", "return", "seats"];
+  const rank = (t?: string) => (LEG_ORDER.indexOf(t ?? "") + 1 || 99);
+  decisions.sort((a, b) => rank(a.event.thread) - rank(b.event.thread) || a.event.ts.localeCompare(b.event.ts));
 
   // Assumptions: grouped by topic so two agents' readings sit side by side.
   const assumptions: AssumptionView[] = [];
@@ -319,7 +324,8 @@ export function derive(runIn: Run, log: LogEvent[], audit: Audit): Brief {
   const mistakes = events.filter((e) => e.kind === "mistake");
   const lapsed = events.filter((e) => e.lost_savings_cad);
   const threadNotes: Record<string, LogEvent[]> = {};
-  for (const e of [...mistakes.filter((m) => !m.corrects), ...lapsed]) (threadNotes[e.thread ?? "other"] ??= []).push(e);
+  for (const e of [...mistakes.filter((m) => !m.corrects), ...lapsed, ...events.filter((x) => x.flag)].sort((a, b) => a.ts.localeCompare(b.ts)))
+    (threadNotes[e.thread ?? "other"] ??= []).push(e);
 
   const problemCount =
     audit.claims.filter((c) => c.status === "conflict" || c.status === "unsourced").length +
