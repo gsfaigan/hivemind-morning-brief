@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import type { ActionView, Brief as BriefT } from "@/lib/derive";
+import { useMemo, useState } from "react";
+import { derive, type ActionView, type AssumptionView, type Brief as BriefT } from "@/lib/derive";
+import type { RawData } from "@/lib/types";
 import { clock, countWord, day, minutes, money, until } from "@/lib/format";
 import { useLive } from "@/lib/live";
 import { useStore } from "@/lib/store";
@@ -12,7 +13,8 @@ import { DecisionCard, LEG_LABEL, NoteLines, OptionBody, headline } from "./Deci
 import { Outbox } from "./Outbox";
 import { Btn, Nav, Page, Panel, Section, Tag } from "./ui";
 
-export function Brief({ brief }: { brief: BriefT }) {
+export function Brief({ data }: { data: RawData }) {
+  const brief = useMemo(() => derive(data.run, data.log, data.audit), [data]);
   const [auditFor, setAuditFor] = useState<string | null>(null);
   const live = useLive(brief);
 
@@ -54,7 +56,7 @@ export function Brief({ brief }: { brief: BriefT }) {
         <Section label="Assumptions" count={brief.assumptions.length}>
           <Panel className="divide-y divide-rule">
             {brief.assumptions.map((e) => (
-              <AssumptionRow key={e.id} e={e} />
+              <AssumptionRow key={e.id} v={e} brief={brief} />
             ))}
           </Panel>
         </Section>
@@ -62,7 +64,7 @@ export function Brief({ brief }: { brief: BriefT }) {
         <Section label="FYI" count={brief.updates.length}>
           <Panel className="divide-y divide-rule">
             {brief.updates.map((e) => (
-              <UpdateRow key={e.id} e={e} />
+              <UpdateRow key={e.id} e={e} brief={brief} />
             ))}
           </Panel>
           <Link href="/night" className="mt-6 inline-block text-[15px] text-ink underline decoration-rule underline-offset-4 hover:decoration-ink">
@@ -87,7 +89,7 @@ export const TICK: Record<Kind, string> = {
   search: "bg-white/20 h-3",
 };
 
-// The night, as a dark band: when Muse worked, what happened when, and the
+// The night, as a band at the top: when the agents worked, what happened when, and the
 // one thing the user needs to know.
 function NightHero({ brief, onAudit }: { brief: BriefT; onAudit: () => void }) {
   const live = useLive(brief);
@@ -96,7 +98,8 @@ function NightHero({ brief, onAudit }: { brief: BriefT; onAudit: () => void }) {
   const t0 = new Date(run.started_at).getTime();
   const t1 = new Date(run.wake_at).getTime();
   const worked = Math.round((new Date(run.ended_at).getTime() - t0) / 60000);
-  const searches = timeline.find((e) => /\d+ searches/.test(e.detail))?.detail.match(/(\d+) searches/)?.[1];
+  const searches = timeline.reduce((t, e) => t + Number(e.detail.match(/(\d+) searches/)?.[1] ?? 0), 0);
+  const multi = run.agents.length > 1;
   const verified = brief.audit.claims.filter((c) => c.status === "verified").length;
 
   return (
@@ -119,14 +122,21 @@ function NightHero({ brief, onAudit }: { brief: BriefT; onAudit: () => void }) {
             )}
           </p>
 
-          <div className="mt-14 sm:mt-20" aria-hidden>
-            <div className="relative h-12">
-              {timeline.map((e) => {
-                const x = ((new Date(e.ts).getTime() - t0) / (t1 - t0)) * 100;
-                return <span key={e.id} className={`absolute bottom-0 w-[3px] ${TICK[e.kind]}`} style={{ left: `${x}%` }} />;
-              })}
-            </div>
-            <div className="h-px bg-rule" />
+          <div className="mt-14 space-y-5 sm:mt-20" aria-hidden>
+            {run.agents.map((a) => (
+              <div key={a.id}>
+                {multi && <div className="mb-1.5 text-[13px] font-semibold">{a.name}</div>}
+                <div className="relative h-12">
+                  {timeline
+                    .filter((e) => e.agent === a.id)
+                    .map((e) => {
+                      const x = ((new Date(e.ts).getTime() - t0) / (t1 - t0)) * 100;
+                      return <span key={e.id} className={`absolute bottom-0 w-[3px] ${TICK[e.kind]}`} style={{ left: `${x}%` }} />;
+                    })}
+                </div>
+                <div className="h-px bg-rule" />
+              </div>
+            ))}
             <div className="num mt-2 flex justify-between text-[12px] text-muted">
               <span>{clock(run.started_at)}</span>
               <span>{clock(run.wake_at)}</span>
@@ -135,7 +145,7 @@ function NightHero({ brief, onAudit }: { brief: BriefT; onAudit: () => void }) {
 
           <dl className="mt-10 grid grid-cols-3 gap-4">
             <Stat k="Worked" v={minutes(worked)} />
-            <Stat k="Searches" v={searches ?? String(brief.searches.length)} />
+            <Stat k="Searches" v={String(searches || brief.searches.length)} />
             <div>
               <dt className="text-[13px] text-muted">Checked</dt>
               <dd className="mt-1">
@@ -308,10 +318,15 @@ function ActionRow({ a, brief, onAudit }: { a: ActionView; brief: BriefT; onAudi
   const o = a.option;
   const breach = !a.rule.withinPreauth;
   const notes = brief.threadNotes[a.event.thread ?? ""] ?? [];
+  const multi = brief.run.agents.length > 1;
+  const who = a.by.map(brief.agentName);
+  const leg = (LEG_LABEL[a.event.thread ?? ""] ?? "").split(" · ")[0];
+  const dupId = `dup-${a.event.id}`;
+  const extra = a.by.slice(1);
 
   const undo = () => {
     dispatch({ t: "undo", id: a.event.id, s: "undoing" });
-    queue(`undo:${a.event.id}`, `Cancel ${o.label} while it's still free (before ${clock(o.cancel_by!)} ${day(o.cancel_by!)}).`);
+    queue(`undo:${a.event.id}`, `Cancel ${o.label} while it's still free (before ${clock(o.cancel_by!)} ${day(o.cancel_by!)}).`, a.by);
     setTimeout(() => dispatch({ t: "undo", id: a.event.id, s: "undone" }), 700);
   };
   const keep = () => {
@@ -323,7 +338,10 @@ function ActionRow({ a, brief, onAudit }: { a: ActionView; brief: BriefT; onAudi
     <article className={`px-6 py-6 sm:px-8 ${state === "undone" ? "opacity-50" : ""}`}>
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <div className="eyebrow">{(LEG_LABEL[a.event.thread ?? ""] ?? "").split(" · ")[0]}</div>
+          <div className="eyebrow">
+            {leg}
+            {multi && ` · ${who.join(" and ")}`}
+          </div>
           <h3 className={`mt-1 text-[18px] font-semibold leading-snug tracking-[-0.01em] ${state === "undone" ? "line-through decoration-muted" : ""}`}>
             {headline(a.event)}
           </h3>
@@ -337,7 +355,37 @@ function ActionRow({ a, brief, onAudit }: { a: ActionView; brief: BriefT; onAudi
         </button>
       ))}
       {breach && !a.corrections.length && <p className="mt-2 text-[14px] text-bad">Over your {money(brief.spend.preauth)} overnight limit.</p>}
-      <NoteLines notes={notes} onAudit={onAudit} />
+      {a.duplicate && state !== "undone" && (
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 bg-act-bg px-4 py-3 text-[14px]">
+          <span className="text-bad">
+            {s.undone[dupId] ? `${extra.map(brief.agentName).join(" and ")} will drop the duplicate.` : `${who.join(" and ")} both reserved this.`}
+          </span>
+          {s.undone[dupId] ? (
+            <button
+              type="button"
+              className="text-ink underline decoration-rule underline-offset-4 hover:decoration-ink"
+              onClick={() => {
+                dispatch({ t: "undo", id: dupId, s: null });
+                queue(`dup:${a.event.id}`, null);
+              }}
+            >
+              Undo
+            </button>
+          ) : (
+            <Btn
+              kind="secondary"
+              className="!px-3.5 !py-1.5 !text-[14px]"
+              onClick={() => {
+                dispatch({ t: "undo", id: dupId, s: "undone" });
+                queue(`dup:${a.event.id}`, `${leg}: ${who[0]} already holds ${o.label}. Cancel your duplicate.`, extra);
+              }}
+            >
+              Cancel {brief.agentName(extra[0])}&apos;s copy
+            </Btn>
+          )}
+        </div>
+      )}
+      <NoteLines notes={notes} onAudit={onAudit} name={multi ? brief.agentName : undefined} />
 
       <div className="mt-5 flex items-center justify-between gap-4 text-[14px]">
         {state === "undone" ? (
@@ -399,34 +447,50 @@ function ActionRow({ a, brief, onAudit }: { a: ActionView; brief: BriefT; onAudi
   );
 }
 
-function AssumptionRow({ e }: { e: LogEvent }) {
+function AssumptionRow({ v, brief }: { v: AssumptionView; brief: BriefT }) {
   const { s, dispatch, queue } = useStore();
   const [open, setOpen] = useState(false);
-  const cur = s.assumptions[e.id];
+  const cur = s.assumptions[v.id];
+  const multi = brief.run.agents.length > 1;
   const pick = (choice: string | null) => {
-    dispatch({ t: "assume", id: e.id, choice });
-    queue(`assume:${e.id}`, choice ? `You assumed "${headline(e)}". Actually: ${choice}. Redo anything this affects and tell me what changes.` : null);
+    dispatch({ t: "assume", id: v.id, choice });
+    queue(
+      `assume:${v.id}`,
+      choice ? (v.agree ? `You assumed "${v.headline}". Actually: ${choice}.` : `On ${v.topic}: go with ${choice}.`) + " Redo anything this affects and tell me what changes." : null,
+    );
+  };
+  // When agents disagree, label each choice with who proposed it.
+  const labelFor = (c: string) => {
+    const r = v.readings.find((x) => (x.event.reading ?? x.event.headline ?? x.event.title) === c);
+    return r && !v.agree ? `${brief.agentName(r.agent)}: ${c}` : c;
   };
   const seg = (active: boolean) =>
     `shrink-0 whitespace-nowrap px-3.5 py-1.5 text-[14px] transition-colors ${active ? "bg-card font-semibold text-ink shadow-[0_1px_3px_rgba(0,0,0,0.12)]" : "text-ink-2 hover:text-ink"}`;
   return (
     <div className="px-6 py-6 sm:px-8">
       <div className="flex items-start justify-between gap-4">
-        <h3 className={`text-[18px] font-semibold leading-snug tracking-[-0.01em] ${cur?.choice ? "text-muted line-through decoration-muted" : ""}`}>{headline(e)}</h3>
+        <div className="min-w-0">
+          {!v.agree && !cur && <div className="eyebrow !text-act">Pick one</div>}
+          {v.agree && multi && v.readings.length > 1 && <div className="eyebrow">Both agents</div>}
+          <h3 className={`mt-1 text-[18px] font-semibold leading-snug tracking-[-0.01em] ${cur?.choice && v.agree ? "text-muted line-through decoration-muted" : ""}`}>
+            {v.headline}
+          </h3>
+        </div>
         <button type="button" onClick={() => setOpen(!open)} className="shrink-0 text-[14px] text-ink underline decoration-rule underline-offset-4 hover:decoration-ink">
           {open ? "Hide" : "Why"}
         </button>
       </div>
       {cur?.choice && <p className="mt-1.5 text-[16px] font-semibold">{cur.choice}</p>}
-      {open && <p className="mt-2 text-[14.5px] leading-relaxed text-ink-2">{e.summary ?? e.detail}</p>}
-      {/* A segmented control: the current reading, or one of the alternatives. */}
+      {open && <p className="mt-2 whitespace-pre-line text-[14.5px] leading-relaxed text-ink-2">{v.detail}</p>}
       <div className="mt-4 flex max-w-full gap-0.5 overflow-x-auto bg-fill p-0.5 sm:inline-flex">
-        <button type="button" onClick={() => pick(null)} className={seg(!cur?.choice)}>
-          As assumed
-        </button>
-        {(e.alternatives ?? []).map((alt) => (
-          <button key={alt} type="button" onClick={() => pick(alt)} className={seg(cur?.choice === alt)}>
-            {alt}
+        {v.agree && (
+          <button type="button" onClick={() => pick(null)} className={seg(!cur?.choice)}>
+            As assumed
+          </button>
+        )}
+        {v.choices.map((c) => (
+          <button key={c} type="button" onClick={() => pick(c)} className={seg(cur?.choice === c)}>
+            {labelFor(c)}
           </button>
         ))}
       </div>
@@ -434,13 +498,16 @@ function AssumptionRow({ e }: { e: LogEvent }) {
   );
 }
 
-function UpdateRow({ e }: { e: LogEvent }) {
+function UpdateRow({ e, brief }: { e: LogEvent; brief: BriefT }) {
   const [open, setOpen] = useState(false);
   return (
     <button type="button" onClick={() => setOpen(!open)} className="block w-full px-6 py-4 text-left transition-colors hover:bg-paper/60 sm:px-8">
       <div className="flex items-baseline justify-between gap-4">
         <span className="text-[16px] leading-snug">{headline(e)}</span>
-        <span className="num shrink-0 text-[13px] text-muted">{clock(e.ts)}</span>
+        <span className="num shrink-0 text-[13px] text-muted">
+          {brief.run.agents.length > 1 && `${brief.agentName(e.agent)} · `}
+          {clock(e.ts)}
+        </span>
       </div>
       {open && <p className="mt-2 text-[14.5px] leading-relaxed text-ink-2">{e.summary ?? e.detail}</p>}
     </button>

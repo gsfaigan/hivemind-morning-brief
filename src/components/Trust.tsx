@@ -1,22 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import history from "@/data/sim/history.json";
-import type { Brief } from "@/lib/derive";
+import { derive } from "@/lib/derive";
+import type { RawData } from "@/lib/types";
 import { day, money } from "@/lib/format";
 import { useProposals } from "@/lib/learn";
 import { useStore } from "@/lib/store";
 import { Outbox } from "./Outbox";
 import { Btn, DarkHeader, Page, Panel, Section, Tag } from "./ui";
 
-export function Trust({ brief }: { brief: Brief }) {
+export function Trust({ data }: { data: RawData }) {
+  const brief = useMemo(() => derive(data.run, data.log, data.audit), [data]);
   const { s, dispatch, queue } = useStore();
   const proposals = useProposals(brief);
   const [hover, setHover] = useState<number | null>(null);
   const trips = history.trips;
   const maxQ = Math.max(...trips.map((t) => t.asked + t.auto));
-  const kept = brief.actions.filter((a) => a.rule.refundable && a.rule.cancelsAfterWake && a.rule.withinPreauth).length;
+  const booked = brief.actions.length + brief.decisions.filter((d) => d.clash).reduce((t, d) => t + d.options.length, 0);
+  const breaks =
+    brief.actions.filter((a) => !(a.rule.refundable && a.rule.cancelsAfterWake && a.rule.withinPreauth)).length +
+    brief.decisions.filter((d) => d.clash).reduce((t, d) => t + d.options.filter((o) => o.refundable === false).length, 0);
 
   const decide = (id: string, rule: string, v: "accepted" | "declined") => {
     dispatch({ t: "rule", id, v });
@@ -32,7 +37,7 @@ export function Trust({ brief }: { brief: Brief }) {
           reversibility.
         </h1>
         <p className="rise mt-5 text-[20px] leading-snug text-ink-2 [animation-delay:80ms] sm:text-[24px]">
-          Muse acts alone only when you could undo it, for free, after you wake up.
+          Your agents act alone only when you could undo it, for free, after you wake up.
         </p>
       </DarkHeader>
       <Page className="pt-4">
@@ -44,7 +49,7 @@ export function Trust({ brief }: { brief: Brief }) {
           <Rule k="Never" tone="pick" v="Wakes you up." />
         </dl>
         <p className="mt-5 text-[14px] text-muted">
-          Last night: inside the rules {kept} of {brief.actions.length} times. One miss, which it reported itself.
+          Last night: {booked} bookings, {breaks} outside the rules.
         </p>
       </Section>
 
@@ -104,7 +109,7 @@ export function Trust({ brief }: { brief: Brief }) {
         </p>
 
         <figure className="mt-10 bg-card p-6 sm:p-8">
-          <figcaption className="text-[13.5px] font-medium">Decisions Muse brought to you</figcaption>
+          <figcaption className="text-[13.5px] font-medium">Decisions brought to you</figcaption>
           <div className="relative mt-6 flex h-40 items-end gap-[2px] border-b border-rule-strong" onMouseLeave={() => setHover(null)}>
             {trips.map((t, i) => {
               const total = t.asked + t.auto;

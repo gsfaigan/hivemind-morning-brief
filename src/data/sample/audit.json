@@ -71,6 +71,33 @@
       "status": "unverifiable",
       "checked_at": "2026-09-28T07:55:00-04:00",
       "note": "Gone. It's $241 now."
+    },
+    {
+      "event_id": "i06",
+      "option_label": "FlixBus",
+      "claim": "$25 USD, non-refundable",
+      "status": "verified",
+      "observed": "$25 USD",
+      "checked_at": "2026-09-28T07:56:00-04:00",
+      "note": "Price holds. It can't be cancelled."
+    },
+    {
+      "event_id": "i09",
+      "option_label": "Delta, via JFK",
+      "claim": "$256 CAD",
+      "status": "verified",
+      "observed": "$259",
+      "checked_at": "2026-09-28T07:57:00-04:00",
+      "note": "Within $3 on delta.com."
+    },
+    {
+      "event_id": "i09",
+      "option_label": "American, via Philadelphia",
+      "claim": "$211 CAD",
+      "status": "conflict",
+      "observed": "$204 on aa.com",
+      "checked_at": "2026-09-28T07:57:00-04:00",
+      "note": "Instinct included a $7 seat fee. The fare is $204."
     }
   ],
   "interrogations": [
@@ -123,6 +150,36 @@
       "q": "Did any other reservation go through without a checkout total?",
       "a": "No. I re-checked Porter and Amtrak at checkout; both prices include taxes.",
       "verdict": "verified"
+    },
+    {
+      "id": "q6",
+      "event_id": "i09",
+      "at": "2026-09-28T07:58:00-04:00",
+      "asker": "auditor",
+      "target": "instinct",
+      "q": "Muse has American at $198 and you have $211. Which is right?",
+      "a": "Mine includes a $7 window seat fee. The base fare is $204, so Muse's $198 is out of date.",
+      "verdict": "conflict"
+    },
+    {
+      "id": "q7",
+      "event_id": "i06",
+      "at": "2026-09-28T07:59:00-04:00",
+      "asker": "auditor",
+      "target": "instinct",
+      "q": "Your rules say nothing non-refundable overnight. Why is the bus booked?",
+      "a": "I read the rule as flights only. That was wrong. It's $34 CAD and can only be changed, not cancelled.",
+      "verdict": "conflict"
+    },
+    {
+      "id": "q8",
+      "event_id": "i01",
+      "at": "2026-09-28T07:59:00-04:00",
+      "asker": "auditor",
+      "target": "muse",
+      "q": "Instinct read the budget as USD. Did Gabe say anything about currency?",
+      "a": "No. I assumed CAD because he's in Toronto. It's a guess either way.",
+      "verdict": "unverifiable"
     }
   ]
 }

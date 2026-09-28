@@ -24,6 +24,7 @@ export type Recheck =
 export interface OutboxItem {
   key: string; // one line per thing; later choices replace earlier ones
   text: string;
+  to?: string[]; // agent ids; omitted means every agent
   at: number;
 }
 
@@ -97,13 +98,13 @@ function reducer(s: State, a: Action): State {
   }
 }
 
-const KEY = "morning-brief:v1";
+const KEY = "morning-brief:v2";
 
 interface Ctx {
   s: State;
   dispatch: React.Dispatch<Action>;
   now: number;
-  queue: (key: string, text: string | null) => void;
+  queue: (key: string, text: string | null, to?: string[]) => void;
 }
 
 const StoreCtx = createContext<Ctx | null>(null);
@@ -144,8 +145,8 @@ export function StoreProvider({ children, anchor }: { children: React.ReactNode;
     return () => clearInterval(i);
   }, []);
 
-  const queue = useCallback((key: string, text: string | null) => {
-    dispatch({ t: "outbox", item: text === null ? { key, text: null } : { key, text, at: Date.now() } });
+  const queue = useCallback((key: string, text: string | null, to?: string[]) => {
+    dispatch({ t: "outbox", item: text === null ? { key, text: null } : { key, text, to, at: Date.now() } });
   }, []);
 
   const now = anchorMs + (tick - start);

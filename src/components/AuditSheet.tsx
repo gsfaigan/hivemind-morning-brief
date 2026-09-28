@@ -4,7 +4,7 @@ import type { Brief } from "@/lib/derive";
 import { clock } from "@/lib/format";
 import { AuditTag, Glyph, Sheet } from "./ui";
 
-// The interrogation log: what the auditor asked Muse and the open web about
+// The interrogation log: what the auditor asked each agent and the open web about
 // each claim, and what came back. This is the "show your work" layer: the
 // brief only shows a badge, and this sheet opens when the user taps it.
 export function AuditSheet({ brief, eventId, onClose }: { brief: Brief; eventId: string | null; onClose: () => void }) {
@@ -27,13 +27,13 @@ export function AuditSheet({ brief, eventId, onClose }: { brief: Brief; eventId:
   return (
     <Sheet open={!!eventId} onClose={onClose} title={all ? "Fact-check" : "What the auditor found"}>
       <p className="text-[14px] leading-relaxed text-ink-2">
-        A second model re-checked Muse&apos;s prices on the live web, then asked Muse about anything that didn&apos;t add up.
+        A separate model re-checked the agents&apos; prices on the live web, compared them against each other, and asked each agent about anything that didn&apos;t add up.
       </p>
 
       {ev && (
         <div className="mt-4 border-l-2 border-ink pl-3">
           <div className="flex items-center gap-1.5 text-[11px] text-muted">
-            <Glyph kind={ev.kind} /> Muse · {clock(ev.ts)}
+            <Glyph kind={ev.kind} /> {brief.agentName(ev.agent)} · {clock(ev.ts)}
           </div>
           <div className="mt-0.5 text-[15px] font-medium leading-snug">{ev.headline ?? ev.title}</div>
           <p className="mt-1 text-[14px] text-ink-2">{ev.summary ?? ev.detail}</p>
@@ -41,7 +41,7 @@ export function AuditSheet({ brief, eventId, onClose }: { brief: Brief; eventId:
       )}
 
       <h4 className="eyebrow mt-8">Claims</h4>
-      {claims.length === 0 && <p className="mt-2 text-[14px] text-muted">Not fact-checked. Muse reported this itself.</p>}
+      {claims.length === 0 && <p className="mt-2 text-[14px] text-muted">Not fact-checked. The agent reported this itself.</p>}
       <ul className="mt-1">
         {claims.map((c, i) => (
           <li key={i} className="border-b border-rule py-2.5">
@@ -61,7 +61,7 @@ export function AuditSheet({ brief, eventId, onClose }: { brief: Brief; eventId:
             {qs.map((q) => (
               <li key={q.id} className="text-[13.5px] leading-relaxed">
                 <div className="text-[11px] text-muted">
-                  Asked {q.target === "muse" ? "Muse" : "the web"} · {clock(q.at)}
+                  Asked {q.target === "web" ? "the web" : brief.agentName(q.target)} · {clock(q.at)}
                 </div>
                 <p className="mt-0.5 font-medium">{q.q}</p>
                 <p className="mt-0.5 border-l border-rule pl-3 text-ink-2">{q.a}</p>

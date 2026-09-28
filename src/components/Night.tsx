@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import type { Brief } from "@/lib/derive";
+import { useMemo, useState } from "react";
+import { derive } from "@/lib/derive";
+import type { RawData } from "@/lib/types";
 import { clock, day, money, toCad } from "@/lib/format";
 import type { Kind } from "@/lib/types";
 import { AuditSheet } from "./AuditSheet";
@@ -35,29 +36,44 @@ const DOT: Record<Kind, string> = {
   search: "bg-rule",
 };
 
-export function Night({ brief }: { brief: Brief }) {
+export function Night({ data }: { data: RawData }) {
+  const brief = useMemo(() => derive(data.run, data.log, data.audit), [data]);
   const [f, setF] = useState<Kind | "all">("all");
+  const [who, setWho] = useState<string>("all");
   const [auditFor, setAuditFor] = useState<string | null>(null);
   const { run, timeline, audit } = brief;
   const t0 = new Date(run.started_at).getTime();
   const t1 = new Date(run.wake_at).getTime();
-  const shown = timeline.filter((e) => f === "all" || e.kind === f);
+  const multi = run.agents.length > 1;
+  const pool = timeline.filter((e) => who === "all" || e.agent === who);
+  const shown = pool.filter((e) => f === "all" || e.kind === f);
+  const seg = (on: boolean) =>
+    `shrink-0 px-3.5 py-1.5 text-[14px] transition-colors ${on ? "bg-card font-semibold text-ink shadow-[0_1px_3px_rgba(0,0,0,0.12)]" : "text-ink-2 hover:text-ink"}`;
 
   return (
     <>
       <DarkHeader here="night" date={day(run.wake_at)}>
         <h1 className="rise text-[44px] font-semibold leading-[1] tracking-[-0.04em] sm:text-[72px]">Last night.</h1>
-        <p className="rise mt-5 text-[20px] leading-snug text-ink-2 [animation-delay:80ms] sm:text-[24px]">Everything {run.agent} logged, unedited.</p>
+        <p className="rise mt-5 text-[20px] leading-snug text-ink-2 [animation-delay:80ms] sm:text-[24px]">Everything {run.agents.map((a) => a.name).join(" and ")} logged, unedited.</p>
 
         {/* One tick per entry, midnight to wake-up. */}
         <div className="mt-14 sm:mt-20" aria-hidden>
-          <div className="relative h-12">
-            {timeline.map((e) => {
-              const x = ((new Date(e.ts).getTime() - t0) / (t1 - t0)) * 100;
-              return <span key={e.id} className={`absolute bottom-0 w-[3px] ${TICK[e.kind]}`} style={{ left: `${x}%` }} />;
-            })}
+          <div className="space-y-5">
+            {run.agents.map((a) => (
+              <div key={a.id}>
+                {multi && <div className="mb-1.5 text-[13px] font-semibold">{a.name}</div>}
+                <div className="relative h-12">
+                  {timeline
+                    .filter((e) => e.agent === a.id)
+                    .map((e) => {
+                      const x = ((new Date(e.ts).getTime() - t0) / (t1 - t0)) * 100;
+                      return <span key={e.id} className={`absolute bottom-0 w-[3px] ${TICK[e.kind]}`} style={{ left: `${x}%` }} />;
+                    })}
+                </div>
+                <div className="h-px bg-rule" />
+              </div>
+            ))}
           </div>
-          <div className="h-px bg-rule" />
           <div className="num mt-2 flex justify-between text-[12px] text-muted">
             <span>{clock(run.started_at)}</span>
             <span>{clock(run.wake_at)}</span>
@@ -73,9 +89,18 @@ export function Night({ brief }: { brief: Brief }) {
       </DarkHeader>
 
       <Page className="pt-10 sm:pt-14">
-      <div className="inline-flex max-w-full gap-0.5 overflow-x-auto bg-fill p-0.5" role="tablist">
+      {multi && (
+        <div className="mb-3 inline-flex max-w-full gap-0.5 overflow-x-auto bg-fill p-0.5" role="tablist" aria-label="Agent">
+          {[{ id: "all", name: "Both agents" }, ...run.agents].map((a) => (
+            <button key={a.id} type="button" role="tab" aria-selected={who === a.id} onClick={() => setWho(a.id)} className={seg(who === a.id)}>
+              {a.name}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="flex max-w-full gap-0.5 overflow-x-auto bg-fill p-0.5 sm:w-fit" role="tablist" aria-label="Kind">
         {FILTERS.map((x) => {
-          const n = x.k === "all" ? timeline.length : timeline.filter((e) => e.kind === x.k).length;
+          const n = x.k === "all" ? pool.length : pool.filter((e) => e.kind === x.k).length;
           return (
             <button
               key={x.k}
@@ -83,7 +108,7 @@ export function Night({ brief }: { brief: Brief }) {
               role="tab"
               aria-selected={f === x.k}
               onClick={() => setF(x.k)}
-              className={`shrink-0 px-3.5 py-1.5 text-[14px] transition-colors ${f === x.k ? "bg-card font-semibold text-ink shadow-[0_1px_3px_rgba(0,0,0,0.12)]" : "text-ink-2 hover:text-ink"}`}
+              className={seg(f === x.k)}
             >
               {x.label} <span className="num opacity-60">{n}</span>
             </button>
@@ -99,6 +124,7 @@ export function Night({ brief }: { brief: Brief }) {
             <li key={e.id} className="relative pb-9 pl-6 sm:pl-8">
               <span className={`absolute -left-[4.5px] top-[6px] size-2 ${DOT[e.kind]}`} aria-hidden />
               <div className="flex items-center gap-2 text-[12.5px] text-muted">
+                {multi && <span className="font-semibold text-ink">{brief.agentName(e.agent)}</span>}
                 <span className="num">{clock(e.ts)}</span>
                 <span>·</span>
                 <span>

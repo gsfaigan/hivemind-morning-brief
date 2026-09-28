@@ -10,7 +10,7 @@ export interface Proposal {
   rule: string;
 }
 
-// Turns what the user did this morning into standing rules Muse could follow
+// Turns what the user did this morning into standing rules the agents could follow
 // next time. Nothing becomes a rule until the user accepts it.
 export function useProposals(brief: Brief): Proposal[] {
   const { s } = useStore();
@@ -45,7 +45,7 @@ export function useProposals(brief: Brief): Proposal[] {
     } else {
       out.push({
         id: `pref:${d.event.id}`,
-        because: `You chose ${st.choice} over Muse's pick.`,
+        because: `You chose ${st.choice} over the agent's pick.`,
         rule: `Next time, lean toward ${st.choice}.`,
       });
     }
@@ -57,7 +57,7 @@ export function useProposals(brief: Brief): Proposal[] {
     if (dep && dep < "07:00") {
       out.push({
         id: `early:${a.event.id}`,
-        because: `You cancelled the ${ampm(dep)} flight Muse picked to save money.`,
+        because: `You cancelled the ${ampm(dep)} flight picked to save money.`,
         rule: "No departures before 7 AM unless it saves $100+.",
       });
     } else {
@@ -71,7 +71,7 @@ export function useProposals(brief: Brief): Proposal[] {
 
   for (const e of brief.assumptions) {
     const c = s.assumptions[e.id]?.choice;
-    if (c) out.push({ id: `assume:${e.id}`, because: `You corrected: "${e.title}".`, rule: `Next time, assume: ${c}.` });
+    if (c) out.push({ id: `assume:${e.id}`, because: e.agree ? `You corrected "${e.headline}".` : `You settled "${e.headline}".`, rule: `Next time, assume ${c}.` });
   }
 
   return out;

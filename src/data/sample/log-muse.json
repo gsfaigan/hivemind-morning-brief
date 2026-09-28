@@ -8,12 +8,14 @@
     "title": "Reading $1,500 as CAD, covering flights, trains and beds — not food",
     "detail": "You didn't say. Toronto origin and a Canadian card, so CAD. Food and local transit are left out; I'll estimate them separately at about $45/day.",
     "alternatives": [
-      "USD, transport + beds",
+      "USD, travel and beds",
       "CAD, everything incl. food"
     ],
     "confidence": "med",
     "headline": "The $1,500 is CAD and covers travel and beds",
-    "summary": "Food and local transit aren't counted. Plan on about $45 a day for those."
+    "summary": "Food and local transit aren't counted. Plan on about $45 a day for those.",
+    "topic": "budget",
+    "reading": "CAD, travel and beds"
   },
   {
     "id": "e02",
@@ -24,12 +26,14 @@
     "title": "Splitting the week 4 nights NYC, 4 nights Boston",
     "detail": "Oct 10–14 New York, Oct 14–18 Boston. You asked me to propose a split; even is the default until you tell me which city matters more.",
     "alternatives": [
-      "5 NYC / 3 Boston",
-      "3 NYC / 5 Boston"
+      "5 nights New York, 3 Boston",
+      "3 nights New York, 5 Boston"
     ],
     "confidence": "low",
     "headline": "Four nights in New York, four in Boston",
-    "summary": "An even split until you tell me which city matters more."
+    "summary": "An even split until you tell me which city matters more.",
+    "topic": "split",
+    "reading": "4 nights New York, 4 Boston"
   },
   {
     "id": "e03",
@@ -44,7 +48,9 @@
     ],
     "confidence": "high",
     "headline": "Buffalo isn't worth the drive",
-    "summary": "Cheaper fares, but the drive and parking cancel it out."
+    "summary": "Cheaper fares, but the drive and parking cancel it out.",
+    "topic": "airports",
+    "reading": "Toronto airports only"
   },
   {
     "id": "e04",
@@ -90,7 +96,8 @@
           "arrive": "08:22",
           "window_seat": true,
           "from": "Billy Bishop",
-          "to": "Newark"
+          "to": "Newark",
+          "key": "porter-2113"
         }
       },
       {
@@ -105,7 +112,8 @@
           "arrive": "13:41",
           "window_seat": true,
           "from": "Pearson",
-          "to": "LaGuardia"
+          "to": "LaGuardia",
+          "key": "ac-716"
         }
       }
     ],
@@ -144,7 +152,8 @@
         "checked_at": "2026-09-28T01:58:00-04:00",
         "facts": {
           "nights": 4,
-          "commute_min": 20
+          "commute_min": 20,
+          "key": "hi-nyc"
         },
         "sub": "6-bed dorm · Upper West Side"
       },
@@ -159,7 +168,8 @@
         "note": "+ ~$65 NJ Transit over 4 days",
         "facts": {
           "nights": 4,
-          "commute_min": 42
+          "commute_min": 42,
+          "key": "hie-newark"
         },
         "sub": "Private room · by the airport"
       },
@@ -172,7 +182,8 @@
         "checked_at": "2026-09-28T02:01:00-04:00",
         "facts": {
           "nights": 4,
-          "commute_min": 5
+          "commute_min": 5,
+          "key": "pod-51"
         },
         "sub": "Private pod · Midtown East"
       }
@@ -217,7 +228,8 @@
           "duration_min": 248,
           "window_seat": null,
           "from": "Penn Station",
-          "to": "South Station"
+          "to": "South Station",
+          "key": "amtrak-171"
         }
       },
       {
@@ -232,7 +244,8 @@
           "arrive": "14:05",
           "duration_min": 275,
           "from": "Port Authority",
-          "to": "South Station"
+          "to": "South Station",
+          "key": "flix-nyc-bos"
         }
       },
       {
@@ -247,7 +260,8 @@
           "from": "Penn Station",
           "to": "South Station",
           "depart": "10:00",
-          "arrive": "13:35"
+          "arrive": "13:35",
+          "key": "acela-2153"
         }
       }
     ],
@@ -287,7 +301,8 @@
         "checked_at": "2026-09-28T02:55:00-04:00",
         "facts": {
           "nights": 4,
-          "commute_min": 10
+          "commute_min": 10,
+          "key": "hi-boston"
         },
         "sub": "4-bed dorm · Chinatown"
       }
@@ -333,7 +348,8 @@
           "window_seat": true,
           "from": "Boston Logan",
           "to": "Pearson",
-          "via": "Philadelphia"
+          "via": "Philadelphia",
+          "key": "aa-phl"
         }
       },
       {
@@ -348,7 +364,8 @@
           "arrive": "19:15",
           "window_seat": true,
           "from": "Boston Logan",
-          "to": "Pearson"
+          "to": "Pearson",
+          "key": "ac-direct-return"
         }
       },
       {
@@ -363,7 +380,8 @@
           "arrive": "15:05",
           "window_seat": true,
           "from": "Boston Logan",
-          "to": "Billy Bishop"
+          "to": "Billy Bishop",
+          "key": "porter-direct-return"
         }
       }
     ],
@@ -395,7 +413,8 @@
           "window_seat": false,
           "from": "Pearson",
           "to": "LaGuardia",
-          "arrive": "09:40"
+          "arrive": "09:40",
+          "key": "ws-1210"
         }
       }
     ],
@@ -422,7 +441,8 @@
         "source_url": "https://www.hiusa.org/find-hostels/massachusetts/boston",
         "checked_at": "2026-09-28T04:08:00-04:00",
         "facts": {
-          "nights": 4
+          "nights": 4,
+          "key": "hi-boston"
         },
         "sub": "4-bed dorm · Chinatown"
       }
@@ -464,7 +484,8 @@
           "arrive": "09:55",
           "duration_min": 805,
           "from": "South Station",
-          "to": "Union Station"
+          "to": "Union Station",
+          "key": "flix-overnight"
         },
         "sub": "Sat night to Sun morning, change in Buffalo"
       }
@@ -505,7 +526,8 @@
           "arrive": "19:15",
           "window_seat": true,
           "from": "Boston Logan",
-          "to": "Pearson"
+          "to": "Pearson",
+          "key": "ac-direct-return"
         }
       }
     ],

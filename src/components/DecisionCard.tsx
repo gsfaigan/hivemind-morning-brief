@@ -35,7 +35,7 @@ export function Why({ e }: { e: LogEvent }) {
       {open && (
         <div className="mt-3 bg-paper p-4 text-[14.5px] leading-relaxed text-ink-2">
           <p>{e.detail}</p>
-          <p className="mt-1.5 text-[12.5px] text-muted">Muse, {clock(e.ts)}</p>
+          <p className="mt-1.5 text-[12.5px] text-muted">{e.id.startsWith("clash-") ? "Both agents" : e.agent.charAt(0).toUpperCase() + e.agent.slice(1)}, {clock(e.ts)}</p>
         </div>
       )}
     </div>
@@ -43,7 +43,7 @@ export function Why({ e }: { e: LogEvent }) {
 }
 
 // Mistakes and lapsed fares that belong to this leg, one line each.
-export function NoteLines({ notes, onAudit }: { notes: LogEvent[]; onAudit: (id: string) => void }) {
+export function NoteLines({ notes, onAudit, name }: { notes: LogEvent[]; onAudit: (id: string) => void; name?: (id: string) => string }) {
   if (!notes.length) return null;
   return (
     <div className="mt-4 space-y-1.5">
@@ -51,7 +51,7 @@ export function NoteLines({ notes, onAudit }: { notes: LogEvent[]; onAudit: (id:
         <button key={n.id} type="button" onClick={() => onAudit(n.id)} className="flex items-baseline gap-2.5 text-left text-[13.5px] hover:underline">
           <span aria-hidden className={`inline-block size-1.5 shrink-0 -translate-y-0.5 ${n.kind === "mistake" ? "bg-bad" : "bg-warn"}`} />
           <span className={n.kind === "mistake" ? "text-bad" : "text-ink-2"}>
-            {n.kind === "mistake" ? "Fixed overnight: " : ""}
+            {name ? `${name(n.agent)}: ` : n.kind === "mistake" ? "Fixed overnight: " : ""}
             {headline(n)}
           </span>
         </button>
@@ -84,6 +84,7 @@ export function OptionBody({ o, onAudit, status }: { o: OptionView; onAudit?: ()
           ))}
         </div>
       )}
+      {o.disagreement && <p className="num mt-2 text-[13.5px] leading-snug text-bad">{o.disagreement}</p>}
       {o.audit && (o.audit.status === "conflict" || o.audit.status === "unsourced") && (
         <p className="mt-2 text-[13.5px] leading-snug text-bad">{o.audit.note}</p>
       )}
@@ -103,10 +104,26 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
   const thread = d.event.thread ?? "";
   const leg = LEG_LABEL[thread] ?? "Decision";
   const notes = brief.threadNotes[thread] ?? [];
+  const multi = brief.run.agents.length > 1;
+  const name = brief.agentName;
+  const agentIds = brief.run.agents.map((a) => a.id);
 
   const choose = (label: string | null, price: number | null, line: string) => {
     dispatch({ t: "decision", id: d.event.id, s: { status: "sending", choice: label, price, at: Date.now() } });
-    queue(`decision:${d.event.id}`, line);
+    if (d.clash && label) {
+      // Two agents each hold something: tell the keeper to keep it, the rest to let go.
+      const keeper = d.clash[label];
+      for (const [held, agent] of Object.entries(d.clash)) {
+        queue(
+          `decision:${d.event.id}:${agent}`,
+          agent === keeper ? `${leg}: keep your ${held}.` : `${leg}: cancel your ${held}. I'm keeping ${name(keeper)}'s ${label}.`,
+          [agent],
+        );
+      }
+    } else {
+      for (const a of agentIds) queue(`decision:${d.event.id}:${a}`, null);
+      queue(`decision:${d.event.id}`, line);
+    }
     // Optimistic: it's in the reply immediately; the short beat just
     // acknowledges the tap before the card collapses.
     setTimeout(() => dispatch({ t: "decision", id: d.event.id, s: { status: "queued", choice: label, price, at: Date.now() } }), 700);
@@ -115,6 +132,7 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
   const reopen = () => {
     dispatch({ t: "decision", id: d.event.id, s: { status: "open" } });
     queue(`decision:${d.event.id}`, null);
+    for (const a of agentIds) queue(`decision:${d.event.id}:${a}`, null);
   };
 
   const sendRedirect = async (instruction: string) => {
@@ -156,7 +174,7 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
           {st.price !== null && st.price > 0 && <div className="num text-[17px] font-semibold">{money(st.price)}</div>}
         </div>
         <div className="mt-2 flex items-center justify-between text-[14px] text-muted">
-          <span>{st.status === "sending" ? <span className="working">Adding to your reply…</span> : "In your reply to Muse"}</span>
+          <span>{st.status === "sending" ? <span className="working">Adding to your reply…</span> : "In your reply"}</span>
           <button type="button" onClick={reopen} className="text-ink underline decoration-rule underline-offset-4 hover:decoration-ink">
             Change
           </button>
@@ -171,7 +189,7 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
         {d.expires_at && <div className="num mb-3 text-[13px] font-semibold text-warn">Hold ends in {until(d.expires_at, now)}</div>}
         <h3 className="text-[26px] font-semibold leading-[1.1] tracking-[-0.03em] sm:text-[34px]">{headline(d.event)}</h3>
         {d.event.summary && <p className="mt-3 text-[17px] leading-relaxed text-ink-2">{d.event.summary}</p>}
-        <NoteLines notes={notes} onAudit={onAudit} />
+        <NoteLines notes={notes} onAudit={onAudit} name={multi ? name : undefined} />
         <Why e={d.event} />
       </div>
 
@@ -183,6 +201,17 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
           const over = total - live.budget;
           const picked = sel === o.label;
           const isPick = o.label === d.recommended;
+          const pickers = Object.entries(d.picks).filter(([, l]) => l === o.label).map(([a]) => a);
+          const tags: React.ReactNode[] = [];
+          if (d.clash) {
+            if (isPick) tags.push(<Tag key="k" tone="pick">Keep this</Tag>);
+            tags.push(<Tag key="h">Held by {name(d.clash[o.label])}</Tag>);
+          } else {
+            if (multi && pickers.length > 1) tags.push(<Tag key="p" tone="pick">Both agents&apos; pick</Tag>);
+            else pickers.forEach((a) => tags.push(<Tag key={a} tone="pick">{name(a)}&apos;s pick</Tag>));
+            if (multi && d.agents.length > 1) tags.push(<Tag key="f">{o.by.length > 1 ? "Found by both" : `Only ${name(o.by[0])}`}</Tag>);
+          }
+          if (o.held) tags.push(<Tag key="o">On hold</Tag>);
           return (
             <label
               key={o.label}
@@ -201,14 +230,7 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
                   <OptionBody
                     o={o}
                     onAudit={() => onAudit(d.event.id)}
-                    status={
-                      (isPick || o.held) && (
-                        <>
-                          {isPick && <Tag tone="pick">Muse&apos;s pick</Tag>}
-                          {o.held && <Tag>On hold</Tag>}
-                        </>
-                      )
-                    }
+                    status={tags.length ? <>{tags}</> : undefined}
                   />
                   {picked && (
                     <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-muted">
@@ -275,7 +297,7 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
               choose(o.label, o.price_cad, `${leg}: go with ${o.label} (${money(o.price_cad)}).${o.held ? " Use the hold." : ""}`);
             }}
           >
-            {sel === d.recommended ? "Book Muse's pick" : "Book this one"}
+            {d.clash ? "Keep this one" : sel === d.recommended ? Object.keys(d.picks).length > 1 && new Set(Object.values(d.picks)).size === 1 ? "Book it" : `Book ${name(d.event.agent)}'s pick` : "Book this one"}
           </Btn>
           <Btn kind="secondary" onClick={() => setRedirecting(true)} disabled={replan?.status === "thinking"}>
             Redirect
@@ -290,7 +312,7 @@ export function DecisionCard({ d, brief, onAudit }: { d: DecisionView; brief: Br
 }
 
 const STAGES = [
-  [0, "Reading Muse's options"],
+  [0, "Reading the options"],
   [2500, "Searching live fares"],
   [7000, "Checking your budget"],
   [14000, "Still searching. You can keep going, this card will update"],
@@ -330,7 +352,7 @@ function ReplanPanel({
   if (r.status === "error") {
     return (
       <div className="border-t border-rule bg-bad-bg px-6 py-5 text-[14px] text-bad sm:px-10">
-        Couldn&apos;t re-plan. Muse&apos;s options above still stand.{" "}
+        Couldn&apos;t re-plan. The options above still stand.{" "}
         <button type="button" className="underline" onClick={onDismiss}>
           Dismiss
         </button>
@@ -357,7 +379,7 @@ function ReplanPanel({
               <div className="mt-0.5 text-[13.5px] text-muted">{o.why}</div>
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
                 {o.label === res.recommended && <Tag tone="pick">Best fit</Tag>}
-                {o.new && <Tag tone="tradeoff">New, not confirmed by Muse</Tag>}
+                {o.new && <Tag tone="tradeoff">New, no agent has confirmed it</Tag>}
                 {o.source_url && (
                   <a href={o.source_url} target="_blank" rel="noreferrer" className="text-[12px] text-muted underline underline-offset-2">
                     Source
@@ -384,7 +406,7 @@ function ReplanPanel({
         ))}
       </ul>
       <p className="mt-2 text-[12px] text-muted">
-        Live search, {(r.ms / 1000).toFixed(0)}s. Muse re-prices new options before anything is held.
+        Live search, {(r.ms / 1000).toFixed(0)}s. The agents re-price new options before anything is held.
       </p>
     </div>
   );

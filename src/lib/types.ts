@@ -22,6 +22,7 @@ export type Thread =
   | "other";
 
 export interface OptionFacts {
+  key?: string; // canonical id so the same flight/place matches across agents
   from?: string; // place names for the stacked departure/arrival block
   to?: string;
   via?: string;
@@ -64,6 +65,8 @@ export interface LogEvent {
   confidence?: "high" | "med" | "low";
   thread?: Thread;
   alternatives?: string[]; // for assumptions: other readings the user can flip to
+  topic?: string; // for assumptions: what it's about, shared across agents ("budget")
+  reading?: string; // for assumptions: the agent's reading, short ("CAD, travel and beds")
   lost_savings_cad?: number; // for things the agent deliberately let lapse
   corrects?: string; // id of an earlier event this one fixes (replaces its prices)
   updates?: string; // id of an open decision this one adds/refreshes options on
@@ -87,7 +90,7 @@ export interface Interrogation {
   event_id?: string;
   at: string;
   asker: "auditor";
-  target: "muse" | "web";
+  target: string; // an agent id ("muse", "instinct") or "web"
   q: string;
   a: string;
   verdict?: AuditStatus;
@@ -101,7 +104,7 @@ export interface Audit {
 }
 
 export interface Run {
-  agent: string;
+  agents: { id: string; name: string }[];
   started_at: string;
   ended_at: string;
   task: string;
@@ -109,4 +112,10 @@ export interface Run {
   preauth_cad: number;
   wake_at: string;
   sample: boolean; // true until the real overnight log replaces it
+}
+
+export interface RawData {
+  run: Run;
+  log: LogEvent[];
+  audit: Audit;
 }
