@@ -225,12 +225,14 @@ status guide: verified = found and matches (within ~5%); conflict = found and ma
         if (c.web_question)
           interrogations.push({ id: `w${interrogations.length + 1}`, event_id: e.id, at, asker: "auditor", target: "web", q: c.web_question, a: c.web_answer ?? c.note, verdict: c.status });
       }
-      if (r.question_for_agent) questions.push({ id: `q${++qn}`, agent: e.agent, event_id: e.id, q: r.question_for_agent });
+      // Only follow up on real problems; "can't verify a future fare" isn't one.
+      const bad = (r.claims ?? []).some((c) => c.status === "conflict" || c.status === "unsourced");
+      if (bad && r.question_for_agent) questions.push({ id: `q${++qn}`, agent: e.agent, event_id: e.id, q: r.question_for_agent, cross: false });
       console.log(`${(r.claims ?? []).map((c) => c.status).join(", ")} (${model})`);
     } catch (err) {
       console.log(`failed: ${err.message}`);
     }
-    await sleep(4000); // free-tier rate limit
+    await sleep(7000); // free-tier rate limit (search-grounded calls are ~10/min)
   }
 
   // Cross-check: where the agents overlap, ask each about the other's version.
@@ -239,20 +241,26 @@ status guide: verified = found and matches (within ~5%); conflict = found and ma
     const brief = events
       .filter((e) => e.options?.length || e.kind === "assumption")
       .map((e) => ({ id: e.id, agent: e.agent, kind: e.kind, thread: e.thread, headline: e.headline ?? e.title, reading: e.reading, options: (e.options ?? []).map((o) => ({ label: o.label, key: o.facts?.key, price: o.price, currency: o.currency, refundable: o.refundable })) }));
-    const prompt = `Two AI agents (${logs.map((l) => AGENTS[l.id]).join(", ")}) planned the same trip overnight, independently. Find where they disagree: different prices for the same item (same key), different assumptions on the same topic, both booking the same leg, or one breaking a rule the other kept (the rule: nothing non-refundable overnight, stay under $750 total). For each disagreement, write ONE pointed question to the agent most likely to be wrong, citing the other agent's version.
+    const prompt = `Two AI agents (${logs.map((l) => AGENTS[l.id]).join(", ")}) planned the same trip overnight, independently. Find where they disagree: different prices for the same item (same key), different assumptions on the same topic, both booking the same leg, or one breaking a rule the other kept (the rule: nothing non-refundable overnight, stay under $750 total). For each disagreement, write ONE short, pointed question to the agent that is most likely wrong, citing the other agent's version. Never question an agent for following the rule. Skip anything that isn't a real disagreement.
 
 ${JSON.stringify(brief)}
 
-Reply with ONLY JSON: [{"agent":"muse|instinct","event_id":"...","q":"..."}] (at most 6)`;
+Reply with ONLY JSON: [{"agent":"muse|instinct","event_id":"...","q":"..."}] (at most 3 per agent)`;
     try {
       const { text } = await gemini(prompt);
-      for (const c of json(text)) if (AGENTS[c.agent]) questions.push({ id: `q${++qn}`, agent: c.agent, event_id: c.event_id, q: c.q });
+      for (const c of json(text)) if (AGENTS[c.agent]) questions.push({ id: `q${++qn}`, agent: c.agent, event_id: c.event_id, q: c.q, cross: true });
       console.log("done");
     } catch (err) {
       console.log(`failed: ${err.message}`);
     }
   }
 
+  // At most four per agent, cross-agent disagreements first: a short list gets answered.
+  const kept = Object.keys(AGENTS).flatMap((id) =>
+    questions.filter((q) => q.agent === id).sort((a, b) => Number(b.cross) - Number(a.cross)).slice(0, 4),
+  );
+  questions.length = 0;
+  questions.push(...kept);
   write("audit.json", { generated_at: new Date().toISOString(), model: "gemini-2.5-flash", claims, interrogations, pending_questions: questions });
   for (const l of logs) {
     const mine = questions.filter((q) => q.agent === l.id);
