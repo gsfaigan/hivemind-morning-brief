@@ -127,8 +127,11 @@ function optionFlags(o: OptionView): Flag[] {
   return f;
 }
 
-export function derive(run: Run, log: LogEvent[], audit: Audit): Brief {
+export function derive(runIn: Run, log: LogEvent[], audit: Audit): Brief {
   const events = [...log].sort((a, b) => a.ts.localeCompare(b.ts));
+  // An agent that didn't export anything shouldn't show up as an empty lane.
+  const active = runIn.agents.filter((a) => events.some((e) => e.agent === a.id));
+  const run = { ...runIn, agents: active.length ? active : runIn.agents };
   const wakeAt = new Date(run.wake_at).getTime();
   const names = Object.fromEntries(run.agents.map((a) => [a.id, a.name]));
   const agentName = (id: string) => names[id] ?? id;

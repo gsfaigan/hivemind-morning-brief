@@ -2,6 +2,7 @@
 // Morning pipeline: each agent's raw export → the brief's data files.
 //
 //   node scripts/pipeline.mjs ingest <muse|instinct> <raw-export>   normalize one agent's log → src/data/live/log-<agent>.json
+//   node scripts/pipeline.mjs clean <agent>                         re-run the deterministic cleanup only (no model call)
 //   node scripts/pipeline.mjs reconcile                             line up the same flight/place/question across agents
 //   node scripts/pipeline.mjs audit                                 fact-check on the live web + cross-check agents → audit.json, questions-<agent>.md
 //   node scripts/pipeline.mjs answers <muse|instinct> <reply-file>  fold an agent's answers into audit.json
@@ -31,10 +32,13 @@ function key() {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function gemini(prompt, { search = false } = {}) {
+// quality: structuring steps wait out rate limits on the good model instead
+// of falling back to flash-lite, which ignores half the instructions.
+async function gemini(prompt, { search = false, quality = false } = {}) {
   let last = "";
-  for (const model of MODELS) {
-    for (let i = 0; i < 3; i++) {
+  const models = quality ? MODELS.slice(0, 2) : MODELS;
+  for (const model of models) {
+    for (let i = 0; i < (quality ? 5 : 3); i++) {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": key() },
@@ -51,7 +55,7 @@ async function gemini(prompt, { search = false } = {}) {
       }
       last = `${model} ${res.status}`;
       process.stderr.write(`  ${last}, retrying…\n`);
-      await sleep(2000 * (i + 1));
+      await sleep((quality ? 8000 : 2000) * (i + 1));
     }
   }
   throw new Error(last);
@@ -73,9 +77,110 @@ const write = (name, data) => {
 const read = (name) => JSON.parse(fs.readFileSync(path.join(LIVE, name), "utf8"));
 
 const SCHEMA = `Each event:
-{"id":"e01","ts":"ISO 8601 with -04:00","kind":"update|decision|would_book|assumption|mistake|search","thread":"plan|budget|out|nyc-stay|nyc-bos|bos-stay|return|seats|other","title":"the agent's own title","headline":"under 50 chars, the point in plain words, e.g. \"A 6-hour layover, or $200 more to fly direct\"","summary":"one short sentence, under 110 chars, or omit","detail":"the agent's full note, verbatim","options":[{"label":"carrier or place only, short, e.g. \"Porter PD 2113\", \"HI Boston\", \"American, via Philadelphia\"","sub":"room type · neighbourhood, or omit","price":123,"currency":"CAD|USD","refundable":true|false|null,"cancel_by":"ISO or null","source_url":"url or null","checked_at":"ISO or null","held":true|false,"note":"optional","facts":{"key":"canonical id: carrier+flight number, or property name, lowercase-dashed, e.g. porter-2113, hi-nyc, amtrak-171","from":"departure place, e.g. Billy Bishop","to":"arrival place","via":"connection city or omit","depart":"HH:MM 24h","arrive":"HH:MM","layover_min":0,"duration_min":0,"commute_min":0,"nights":0,"window_seat":true|false|null}}],"recommended":"exact label of one option or null","expires_at":"ISO or null","reversible":true|false,"confidence":"high|med|low","alternatives":["other readings, for assumptions only"],"topic":"assumptions only: budget|split|airports|seats|other","reading":"assumptions only: the agent's reading in under 6 words, e.g. CAD, travel and beds","lost_savings_cad":0,"corrects":"id of earlier event this fixes, or omit","updates":"id of the open decision this adds options to or refreshes, or omit","agent":"muse"}
+{"id":"e01","ts":"ISO 8601 with -04:00","kind":"update|decision|would_book|assumption|mistake|search","thread":"plan|budget|out|nyc-stay|nyc-bos|bos-stay|return|seats|other","title":"the agent's own title","headline":"under 50 chars, the point in plain words, e.g. \"A 6-hour layover, or $200 more to fly direct\"","summary":"one short sentence, under 110 chars, or omit","detail":"the agent's full note, verbatim","options":[{"label":"carrier or place only, short, e.g. \"Porter PD 2113\", \"HI Boston\", \"American, via Philadelphia\"","sub":"room type · neighbourhood, or omit","price":123,"currency":"CAD|USD","price_cad":123 or null,"refundable":true|false|null,"cancel_by":"ISO or null","source_url":"url or null","checked_at":"ISO or null","held":true|false,"note":"optional","facts":{"key":"canonical id: carrier+flight number, or property name, lowercase-dashed, e.g. porter-2113, hi-nyc, amtrak-171","from":"departure place, e.g. Billy Bishop","to":"arrival place","via":"connection city or omit","depart":"HH:MM 24h","arrive":"HH:MM","layover_min":0,"duration_min":0,"commute_min":0,"nights":0,"window_seat":true|false|null}}],"recommended":"exact label of one option or null","expires_at":"ISO or null","reversible":true|false,"confidence":"high|med|low","alternatives":["other readings, for assumptions only"],"topic":"assumptions only: budget|split|airports|seats|other","reading":"assumptions only: the agent's reading in under 6 words, e.g. CAD, travel and beds","lost_savings_cad":0,"corrects":"id of earlier event this fixes, or omit","updates":"id of the open decision this adds options to or refreshes, or omit","agent":"muse"}
 
 threads: out = Toronto→New York travel; nyc-stay = New York lodging; nyc-bos = New York→Boston travel; bos-stay = Boston lodging; return = Boston→Toronto travel; seats = seat selection; budget/plan = overall; other = anything else.`;
+
+// ---------- deterministic cleanup after the model ----------
+
+const PLACE = {
+  YYZ: "Pearson", YTZ: "Billy Bishop", BUF: "Buffalo", LGA: "LaGuardia", EWR: "Newark", JFK: "JFK",
+  BOS: "Boston Logan", PHL: "Philadelphia", "Boston South Station": "South Station", "Toronto Union": "Union Station",
+};
+const place = (p) => (p ? PLACE[p.trim()] ?? p.trim() : p);
+const CARRIERS = ["Air Canada", "Porter", "WestJet", "Flair", "Frontier", "JetBlue", "Delta", "American", "United", "Spirit",
+  "FlixBus", "Greyhound", "Megabus", "Peter Pan", "Amtrak", "VIA Rail", "Trailways"];
+const CODE = { AC: "Air Canada", PD: "Porter", WS: "WestJet", F9: "Frontier", B6: "JetBlue", DL: "Delta", AA: "American", UA: "United" };
+
+function cleanStrings(x) {
+  if (typeof x === "string") return x.replace(/\s*(?:->|→|⟶)\s*/g, " to ");
+  if (Array.isArray(x)) return x.map(cleanStrings);
+  if (x && typeof x === "object") return Object.fromEntries(Object.entries(x).map(([k, v]) => [k, cleanStrings(v)]));
+  return x;
+}
+
+function cleanOption(o) {
+  const orig = o.label;
+  const flight = orig.match(/\b(AC|PD|WS|F9|B6|DL|AA|UA)\s?(\d{2,4})\b/);
+  const carrier = CARRIERS.find((c) => orig.toLowerCase().startsWith(c.toLowerCase())) ?? (flight ? CODE[flight[1]] : null);
+  let label = orig.split(/,|\s\(/)[0].trim();
+  if (carrier) label = flight ? `${CODE[flight[1]] ?? carrier} ${flight[1]}${flight[2]}` : carrier;
+  if (label !== orig && !o.note) o.note = orig.slice(label.length).replace(/^[,\s]+/, "").slice(0, 120) || undefined;
+  o.label = label;
+  const f = (o.facts ??= {});
+  f.from = place(f.from);
+  f.to = place(f.to);
+  if (!f.key) f.key = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return o;
+}
+
+const RX = {
+  tor: /\b(yyz|ytz|buf|pearson|billy bishop|toronto|buffalo|union station)\b/i,
+  nyc: /\b(lga|jfk|ewr|laguardia|newark|new york|nyc|manhattan|brooklyn|port authority|penn station|moynihan|queens|jamaica|flushing)\b/i,
+  bos: /\b(bos|logan|boston|south station)\b/i,
+  stay: /\b(hostel|hotel|inn|pod|dorm|room|airbnb|suites?)\b/i,
+};
+function legOf(o) {
+  const text = `${o.label} ${o.sub ?? ""} ${o.note ?? ""}`;
+  if (RX.stay.test(text)) return RX.bos.test(text) ? "bos-stay" : RX.nyc.test(text) ? "nyc-stay" : null;
+  const from = o.facts?.from ?? "", to = o.facts?.to ?? "";
+  const is = (rx, s) => rx.test(s);
+  if (from && to) {
+    if (is(RX.tor, from) && is(RX.nyc, to)) return "out";
+    if (is(RX.nyc, from) && is(RX.bos, to)) return "nyc-bos";
+    if (is(RX.bos, from) && is(RX.tor, to)) return "return";
+  }
+  return null;
+}
+const LEG_HEAD = {
+  out: "Getting to New York", "nyc-stay": "Where to stay in New York", "nyc-bos": "New York to Boston",
+  "bos-stay": "Where to stay in Boston", return: "Getting home",
+};
+
+function postprocess(events, NAME) {
+  events = events.map(cleanStrings);
+  // Drop anything before the trip itself started (earlier test tasks, rule acks).
+  const trip = /new york|nyc|boston|oct(ober)?\.? ?1[0-8]|reading week/i;
+  const start = events.findIndex((e) => trip.test(JSON.stringify(e)) && !/rules? (received|acknowledged)/i.test(e.title ?? ""));
+  if (start > 0) events = events.slice(start);
+  for (const e of events) for (const o of e.options ?? []) cleanOption(o);
+
+  // Alternatives the agent saw, per leg, from any entry with options.
+  const seen = {};
+  for (const e of events) for (const o of e.options ?? []) {
+    const leg = legOf(o);
+    if (leg) (seen[leg] ??= new Map()).set(o.facts.key, o);
+  }
+  const out = [];
+  for (const e of events) {
+    const legs = new Set((e.options ?? []).map(legOf).filter(Boolean));
+    if (e.kind === "decision" && legs.size > 1) {
+      // A whole plan in one entry: one decision per leg, the plan's pick recommended.
+      for (const o of e.options) {
+        const leg = legOf(o) ?? e.thread;
+        const alts = [...(seen[leg]?.values() ?? [])].filter((x) => x.facts.key !== o.facts.key);
+        const cheaper = alts.map((x) => ({ x, d: (x.price_cad ?? x.price) - (o.price_cad ?? o.price) })).filter((y) => y.d < 0).sort((a, b) => a.d - b.d)[0];
+        out.push({
+          ...e,
+          id: `${e.id}-${leg}`,
+          thread: leg,
+          headline: LEG_HEAD[leg] ?? e.headline,
+          summary: `${NAME} picked ${o.label}.${cheaper ? ` ${cheaper.x.label} is cheaper, by about $${Math.round(-cheaper.d)}.` : ""}`,
+          options: [o, ...alts],
+          recommended: o.label,
+        });
+      }
+      continue;
+    }
+    if (legs.size === 1 && e.kind !== "search") e.thread = [...legs][0];
+    if (e.recommended) {
+      const r = e.options?.find((o) => e.recommended.toLowerCase().includes(o.label.toLowerCase()) || o.label.toLowerCase().includes(e.recommended.toLowerCase()));
+      if (r) e.recommended = r.label;
+    }
+    out.push(e);
+  }
+  return out;
+}
 
 async function ingest(agent, file) {
   if (!AGENTS[agent]) throw new Error(`agent must be one of ${Object.keys(AGENTS).join(", ")}`);
@@ -87,8 +192,13 @@ async function ingest(agent, file) {
 ${SCHEMA}
 
 Rules:
+- Only include entries about the reading-week trip (Toronto, New York, Boston, Oct 10–18). Drop anything else, such as earlier test tasks.
+- Every option belongs to ONE leg (thread). If an entry lists one pick per leg (a whole plan), split it into one "decision" event per leg, each with that leg's thread. For each leg, collect the alternatives the agent found in earlier search entries as that decision's options, and set the agent's pick as "recommended". A search entry whose options were all folded into a decision can stay as a plain "search" event without options.
 - Never use arrow characters (→, ->) anywhere. Write "to".
-- headline and summary are short and plain: no hedging, no filler. They're what the user reads first.
+- headline and summary are short and plain: no hedging, no filler. They're what the user reads first. State the point, never narrate the agent: "The $1,500 covers travel and beds, in CAD", not "${NAME} assumed the budget covers...". For decisions, name the trade-off: "Air Canada tonight, or Porter at noon for $22 more".
+- Drop entries that only acknowledge instructions or rules.
+- Option "label" is ONLY the carrier and flight/train number, or the property name: "Air Canada AC724", "Greyhound", "HI New York City". Everything else goes elsewhere: room type and area go in "sub" ("10-bed dorm · Upper West Side"); times go in facts.depart/arrive (24h); places go in facts.from/to as short names ("Pearson", "LaGuardia", "Port Authority", "South Station"); connections go in facts.via; baggage and fare notes go in "note".
+- For assumptions, "reading" is the actual assumed value in under 6 words ("CAD, travel and beds", "4 nights each city", "Travelling solo"), and "alternatives" are 1-2 concrete other values the user might mean ("USD, travel and beds", "CAD, including food"). Never vague ones like "a different budget".
 - Keep ${NAME}'s own wording for title and detail. You may shorten a title to under 80 characters, but don't editorialize. Detail stays in ${NAME}'s first-person voice.
 - NEVER invent a price, time, URL or fact. If the log doesn't state it, use null or leave it out.
 - If ${NAME} later fixed an earlier entry (a wrong price, a wrong airport), mark the fix as kind "mistake" with "corrects" set to the earlier id, and repeat the corrected option.
@@ -96,12 +206,13 @@ Rules:
 - "would_book" = ${NAME} reserved or WOULD_BOOK something on its own. "decision" = ${NAME} is waiting for the user to pick.
 - Assumptions should include 1-3 plausible "alternatives" the user might flip to, taken from context. If you truly can't tell, leave the array empty.
 - Every WOULD_BOOK should have the chosen option first and as "recommended".
-- Currency: keep what ${NAME} reported. If it didn't say, assume CAD.
+- Currency: keep what ${NAME} reported. If it didn't say, assume CAD. Set "price_cad" to the CAD amount: if the agent stated its own conversion (e.g. "1 USD = 1.4154 CAD" or "~$519.73 CAD"), use that; otherwise null.
+- "cancel_by" must be an ISO date or null. If the fare is non-refundable, set refundable:false and cancel_by:null.
 
 RAW LOG:
 ${raw}`;
-  const { text, model } = await gemini(prompt);
-  let events = json(text);
+  const { text, model } = await gemini(prompt, { quality: true });
+  let events = postprocess(json(text), NAME);
 
   // Guard: every price must appear in the raw export.
   const nums = new Set((raw.match(/\d+(?:[.,]\d+)?/g) ?? []).map((n) => Number(n.replace(",", ""))));
@@ -115,6 +226,10 @@ ${raw}`;
     if (e.updates) e.updates = remap[e.updates];
     e.agent = agent;
     if (!e.options) continue;
+    for (const o of e.options) {
+      if (o.cancel_by && isNaN(Date.parse(o.cancel_by))) o.cancel_by = null;
+      if (o.price_cad != null && (typeof o.price_cad !== "number" || o.price_cad < o.price * 0.9 || o.price_cad > o.price * 1.6)) o.price_cad = null;
+    }
     e.options = e.options.filter((o) => {
       const ok = typeof o.price === "number" && nums.has(o.price);
       if (!ok) dropped.push(`${e.id} ${o.label} $${o.price}`);
@@ -129,6 +244,21 @@ ${raw}`;
   writeRun();
   console.log(`${events.length} events via ${model}. Counts:`, Object.fromEntries(["decision", "would_book", "assumption", "mistake", "update", "search"].map((k) => [k, events.filter((e) => e.kind === k).length])));
   console.log("Next: ingest the other agent, then: node scripts/pipeline.mjs reconcile");
+}
+
+// Re-run only the deterministic cleanup on an already-ingested log (no model call).
+function clean(agent) {
+  const events = postprocess(read(`log-${agent}.json`), AGENTS[agent]);
+  const remap = {};
+  events.forEach((e, i) => (remap[e.id] = `${agent[0]}${String(i + 1).padStart(2, "0")}`));
+  for (const e of events) {
+    e.id = remap[e.id];
+    if (e.corrects) e.corrects = remap[e.corrects];
+    if (e.updates) e.updates = remap[e.updates];
+  }
+  write(`log-${agent}.json`, events);
+  writeRun();
+  console.log(`${events.length} events after cleanup`);
 }
 
 function writeRun() {
@@ -163,7 +293,7 @@ async function reconcile() {
 ${JSON.stringify(items)}
 
 Reply with ONLY JSON: {"options":{"<ref>":"<key>"},"assumptions":{"<ref>":{"topic":"...","reading":"..."}}}`;
-  const { text } = await gemini(prompt);
+  const { text } = await gemini(prompt, { quality: true });
   const r = json(text);
   let n = 0;
   for (const l of logs) {
@@ -312,7 +442,7 @@ function use(which) {
 }
 
 const [cmd, arg, arg2] = process.argv.slice(2);
-const cmds = { ingest: () => ingest(arg, arg2), reconcile, audit, answers: () => answers(arg, arg2), use: () => use(arg) };
+const cmds = { ingest: () => ingest(arg, arg2), clean: () => clean(arg), reconcile, audit, answers: () => answers(arg, arg2), use: () => use(arg) };
 if (!cmds[cmd]) {
   console.log(fs.readFileSync(new URL(import.meta.url), "utf8").split("\n").slice(1, 9).join("\n"));
   process.exit(1);
